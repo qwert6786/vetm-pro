@@ -106,32 +106,35 @@
 
 <!-- n.21.9 -->
 <script>
-    function togglePasswordVisibility(fieldId) {
-        const field = document.getElementById(fieldId);
-        const icon = field.parentElement.querySelector('.toggle-password');
-        if (field.type === 'password') {
-            field.type = 'text';
-            icon.textContent = '🙈';
-        } else {
-            field.type = 'password';
-            icon.textContent = '👁️';
-        }
+const API_URL = 'https://script.google.com/macros/s/AKfycbxnhuBva5D8z_zuKqZQ1-WwYSRROjOB2-95GZGKCSKdcPxdBu193pCtv3oAMHLikc9k/exec';
+
+async function callApi(payload) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    });
+    return response.json();
+}
+
+async function login(email, password) {
+    const result = await callApi({ action: 'login', email, password });
+    if (result.ok) {
+        sessionStorage.setItem('token', result.token);
+        sessionStorage.setItem('fullName', result.fullName);
+        window.location.href = 'cards.html';
+    } else {
+        alert('فشل تسجيل الدخول: ' + result.error);
     }
+    return result;
+}
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        // n.21.10
-    });
-
-    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
-        e.preventDefault();
-        // n.21.11
-    });
-
-    document.getElementById('createAccountLink').addEventListener('click', function(e) {
-        e.preventDefault();
-        // n.21.12
-    });
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    login(email, password);
+});
 </script>
 
 </body>
