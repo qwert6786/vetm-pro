@@ -124,36 +124,42 @@
 
 <!-- n.23.12 -->
 <script>
-    function togglePasswordVisibility(fieldId) {
-        const field = document.getElementById(fieldId);
-        const icon = field.parentElement.querySelector('.toggle-password');
-        if (field.type === 'password') {
-            field.type = 'text';
-            icon.textContent = '🙈';
-        } else {
-            field.type = 'password';
-            icon.textContent = '👁️';
-        }
-    }
+const API_URL = 'https://script.google.com/macros/s/AKfycbxnhuBva5D8z_zuKqZQ1-WwYSRROjOB2-95GZGKCSKdcPxdBu193pCtv3oAMHLikc9k/exec';
 
-    document.getElementById('signupForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const password = document.getElementById('password').value;
-        const confirm = document.getElementById('confirmPassword').value;
-        const errorDiv = document.getElementById('passwordError');
-
-        if (password !== confirm) {
-            errorDiv.style.display = 'block';
-            // n.23.13
-            return;
-        } else {
-            errorDiv.style.display = 'none';
-            // n.23.14
-        }
-
-        // n.23.15
+async function callApi(payload) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
     });
+    return response.json();
+}
+
+async function register(email, password, fullName) {
+    const result = await callApi({ action: 'register', email, password, fullName });
+    if (result.ok) {
+        alert('تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول.');
+        window.location.href = 'login.html';
+    } else {
+        alert('فشل إنشاء الحساب: ' + result.error);
+    }
+    return result;
+}
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+        document.getElementById('passwordMatchError').style.display = 'block';
+        return;
+    }
+    document.getElementById('passwordMatchError').style.display = 'none';
+    register(email, password, fullName);
+});    
 </script>
 
 </body>
