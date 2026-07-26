@@ -122,8 +122,24 @@
     </div>
 </div>
 
+<div id="passwordMatchError" style="display: none; color: red; font-size: 14px; margin-top: 5px;">
+    ⚠️ كلمة السر وتأكيدها غير متطابقين.
+</div>
+    
 <!-- n.23.12 -->
 <script>
+    
+function togglePasswordVisibility(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = field.parentElement.querySelector('.toggle-password');
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.textContent = '🙈';
+    } else {
+        field.type = 'password';
+        icon.textContent = '👁️';
+    }
+}
 const API_URL = 'https://script.google.com/macros/s/AKfycbzwt6Zl6-qgnmL621Rip0osUSfg4p7sgBRojgQPVaa79fQchj5Gon6NwoJqhuQ58W7e/exec';
 
 async function callApi(payload) {
