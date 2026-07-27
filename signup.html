@@ -95,6 +95,19 @@
                 <div id="passwordError" class="error-message">⚠️ كلمة السر وتأكيدها غير متطابقين.</div>
             </div>
 
+            <!-- 129.4.3 حقل رمز التحقق والزر -->
+<div id="verificationSection">
+    <div style="display: flex; gap: 10px; align-items: center; margin: 15px 0;">
+        <input type="text" id="verificationCode" placeholder="أدخل رمز التحقق" 
+               style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+        <button type="button" id="sendCodeBtn" 
+                style="background: #C62828; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+            إرسال الرمز
+        </button>
+    </div>
+    <div id="codeMessage" style="color: green; font-size: 14px; display: none;"></div>
+</div>
+            
             <!-- n.23.9 -->
             <button type="submit"
                     class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition duration-200">
@@ -151,16 +164,62 @@ async function callApi(payload) {
     return response.json();
 }
 
-async function register(email, password, fullName) {
-    const result = await callApi({ action: 'register', email, password, fullName });
+// 129.4.5 دالة التسجيل الجديدة (مع رمز التحقق)
+async function register(email, password, fullName, verificationCode) {
+    const result = await callApi({
+        action: 'register',
+        email: email,
+        password: password,
+        fullName: fullName,
+        verificationCode: verificationCode
+    });
     if (result.ok) {
-        alert('تم إنشاء الحساب بنجاح. يمكنك الآن تسجيل الدخول.');
+        alert('تم إنشاء الحساب بنجاح.');
         window.location.href = 'login.html';
     } else {
         alert('فشل إنشاء الحساب: ' + result.error);
     }
     return result;
 }
+
+// 129.4.6 إرسال رمز التحقق (حدث الزر)
+document.getElementById('sendCodeBtn').addEventListener('click', async function() {
+    const email = document.getElementById('email').value.trim();
+    if (!email) {
+        alert('يرجى إدخال البريد الإلكتروني أولاً.');
+        return;
+    }
+    const result = await callApi({ action: 'sendVerificationCode', email: email });
+    if (result.ok) {
+        document.getElementById('codeMessage').textContent = '✅ تم إرسال الرمز إلى بريدك.';
+        document.getElementById('codeMessage').style.display = 'block';
+    } else {
+        alert('فشل إرسال الرمز: ' + result.error);
+    }
+});
+
+// 129.4.7 تعديل حدث النموذج (إضافة رمز التحقق)
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const verificationCode = document.getElementById('verificationCode').value.trim();
+
+    if (password !== confirmPassword) {
+        document.getElementById('passwordMatchError').style.display = 'block';
+        return;
+    }
+    document.getElementById('passwordMatchError').style.display = 'none';
+    
+    if (!verificationCode) {
+        alert('يرجى إدخال رمز التحقق.');
+        return;
+    }
+    
+    register(email, password, fullName, verificationCode);
+});
 
 document.getElementById('signupForm').addEventListener('submit', function(e) {
     e.preventDefault();
