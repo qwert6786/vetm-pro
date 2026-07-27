@@ -34,28 +34,24 @@
 </head>
 <body>
 
+<!-- n.135.2 التحذير القانوني -->
 <!--
-⚠️ التحذير القانوني:
-هذا الكود هو ملكية خاصة لمشروع VETM™ (علامة تجارية قيد الاستخدام).
-لا يُسمح بنسخه أو إعادة توزيعه أو استخدامه تجارياً دون موافقة خطية مسبقة من المالك.
-أي انتهاك لهذا التحذير سيُعرّض المخالف للمساءلة القانونية.
+⚠️ تحذير قانوني: هذا الكود ملكية خاصة لمشروع VETM™. لا يُسمح بنسخه أو إعادة توزيعه أو استخدامه تجارياً دون موافقة خطية مسبقة.
 -->
-
-<!-- n.23.1 -->
 
 <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8">
 
-        <!-- n.23.2 -->
+        <!-- n.135.3 الشعار -->
         <div class="text-center mb-6">
             <h1 class="text-4xl font-extrabold brand-red">VETM</h1>
             <p class="text-sm text-gray-600 mt-1">انشاء حساب VETM لتتمكن من ادارة بطاقتك المهنية</p>
         </div>
 
-        <!-- n.23.3 -->
+        <!-- n.135.4 نموذج إنشاء الحساب -->
         <form id="signupForm" class="space-y-5">
 
-            <!-- n.23.4 -->
+            <!-- الاسم الثلاثي -->
             <div>
                 <label for="fullName" class="block text-sm font-bold text-gray-700 mb-1">الاسم الثلاثي</label>
                 <input type="text" id="fullName" name="fullName" required
@@ -63,7 +59,7 @@
                        placeholder="مثال: أحمد حسين قاسم" autocomplete="name">
             </div>
 
-            <!-- n.23.5 -->
+            <!-- البريد الإلكتروني -->
             <div>
                 <label for="email" class="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني</label>
                 <input type="email" id="email" name="email" required
@@ -71,7 +67,7 @@
                        placeholder="example@domain.com" autocomplete="email">
             </div>
 
-            <!-- n.23.6 -->
+            <!-- كلمة السر -->
             <div>
                 <label for="password" class="block text-sm font-bold text-gray-700 mb-1">كلمة السر</label>
                 <div class="password-wrapper">
@@ -82,7 +78,7 @@
                 </div>
             </div>
 
-            <!-- n.23.7 -->
+            <!-- تأكيد كلمة السر -->
             <div>
                 <label for="confirmPassword" class="block text-sm font-bold text-gray-700 mb-1">تأكيد كلمة السر</label>
                 <div class="password-wrapper">
@@ -91,38 +87,23 @@
                            placeholder="أعد كتابة كلمة السر" autocomplete="new-password">
                     <span class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">👁️</span>
                 </div>
-                <!-- n.23.8 -->
-                <div id="passwordError" class="error-message">⚠️ كلمة السر وتأكيدها غير متطابقين.</div>
+                <div id="passwordMatchError" class="error-message">⚠️ كلمة السر وتأكيدها غير متطابقين.</div>
             </div>
 
-            <!-- 129.4.3 حقل رمز التحقق والزر -->
-<div id="verificationSection">
-    <div style="display: flex; gap: 10px; align-items: center; margin: 15px 0;">
-        <input type="text" id="verificationCode" placeholder="أدخل رمز التحقق" 
-               style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
-        <button type="button" id="sendCodeBtn" 
-                style="background: #C62828; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
-            إرسال الرمز
-        </button>
-    </div>
-    <div id="codeMessage" style="color: green; font-size: 14px; display: none;"></div>
-</div>
-            
-            <!-- n.23.9 -->
-            <button type="submit"
+            <!-- n.135.5 زر إرسال الرمز -->
+            <button type="button" id="sendCodeBtn"
                     class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition duration-200">
-                إنشاء حساب
+                إرسال رمز إلى بريدك
             </button>
         </form>
 
-        <!-- n.23.10 -->
+        <!-- n.135.6 الفاصل والروابط السفلية -->
         <div class="flex items-center gap-4 my-6">
             <div class="flex-1 h-px bg-gray-300"></div>
             <div class="w-2 h-2 bg-[#C62828] rounded-full"></div>
             <div class="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        <!-- n.23.11 -->
         <div class="text-center">
             <a href="login.html" class="link-red font-bold text-sm">
                 لديك حساب بالفعل؟ سجل الدخول هنا
@@ -135,106 +116,70 @@
     </div>
 </div>
 
-<div id="passwordMatchError" style="display: none; color: red; font-size: 14px; margin-top: 5px;">
-    ⚠️ كلمة السر وتأكيدها غير متطابقين.
-</div>
-    
-<!-- n.23.12 -->
+<!-- n.135.7 جافا سكريبت -->
 <script>
-    
-function togglePasswordVisibility(fieldId) {
-    const field = document.getElementById(fieldId);
-    const icon = field.parentElement.querySelector('.toggle-password');
-    if (field.type === 'password') {
-        field.type = 'text';
-        icon.textContent = '🙈';
-    } else {
-        field.type = 'password';
-        icon.textContent = '👁️';
-    }
-}
-const API_URL = 'https://script.google.com/macros/s/AKfycbxHYi9U4qHXhkXqTfCU24sr2D5ikEEXaEB1YaMDpZ4s0_eIjx1CnYCHvqSLyKSv15gx/exec';
+    // n.135.8 عنوان الخادم الخلفي (استبدل بالرابط الفعلي)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxHYi9U4qHXhkXqTfCU24sr2D5ikEEXaEB1YaMDpZ4s0_eIjx1CnYCHvqSLyKSv15gx/exec';
 
-async function callApi(payload) {
-    const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
+    // n.135.9 دالة الاتصال العامة
+    async function callApi(payload) {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        return response.json();
+    }
+
+    // n.135.10 دالة إظهار/إخفاء كلمة السر
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.parentElement.querySelector('.toggle-password');
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.textContent = '🙈';
+        } else {
+            field.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+
+    // n.135.11 حدث زر "إرسال رمز إلى بريدك"
+    document.getElementById('sendCodeBtn').addEventListener('click', async function() {
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const errorDiv = document.getElementById('passwordMatchError');
+
+        // التحقق من صحة المدخلات
+        if (!fullName || !email || !password || !confirmPassword) {
+            alert('يرجى ملء جميع الحقول.');
+            return;
+        }
+        if (password !== confirmPassword) {
+            errorDiv.style.display = 'block';
+            return;
+        }
+        errorDiv.style.display = 'none';
+        if (password.length < 8) {
+            alert('كلمة السر يجب أن تكون 8 أحرف على الأقل.');
+            return;
+        }
+
+        // طلب إرسال الرمز إلى الخادم
+        const result = await callApi({ action: 'sendVerificationCode', email: email });
+        if (result.ok) {
+            // تخزين البيانات مؤقتاً للصفحة التالية
+            sessionStorage.setItem('tempFullName', fullName);
+            sessionStorage.setItem('tempEmail', email);
+            sessionStorage.setItem('tempPassword', password);
+            // الانتقال إلى صفحة التحقق
+            window.location.href = 'verify.html';
+        } else {
+            alert('فشل إرسال الرمز: ' + result.error);
+        }
     });
-    return response.json();
-}
-
-// 129.4.5 دالة التسجيل الجديدة (مع رمز التحقق)
-async function register(email, password, fullName, verificationCode) {
-    const result = await callApi({
-        action: 'register',
-        email: email,
-        password: password,
-        fullName: fullName,
-        verificationCode: verificationCode
-    });
-    if (result.ok) {
-        alert('تم إنشاء الحساب بنجاح.');
-        window.location.href = 'login.html';
-    } else {
-        alert('فشل إنشاء الحساب: ' + result.error);
-    }
-    return result;
-}
-
-// 129.4.6 إرسال رمز التحقق (حدث الزر)
-document.getElementById('sendCodeBtn').addEventListener('click', async function() {
-    const email = document.getElementById('email').value.trim();
-    if (!email) {
-        alert('يرجى إدخال البريد الإلكتروني أولاً.');
-        return;
-    }
-    const result = await callApi({ action: 'sendVerificationCode', email: email });
-    if (result.ok) {
-        document.getElementById('codeMessage').textContent = '✅ تم إرسال الرمز إلى بريدك.';
-        document.getElementById('codeMessage').style.display = 'block';
-    } else {
-        alert('فشل إرسال الرمز: ' + result.error);
-    }
-});
-
-// 129.4.7 تعديل حدث النموذج (إضافة رمز التحقق)
-document.getElementById('signupForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const fullName = document.getElementById('fullName').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const verificationCode = document.getElementById('verificationCode').value.trim();
-
-    if (password !== confirmPassword) {
-        document.getElementById('passwordMatchError').style.display = 'block';
-        return;
-    }
-    document.getElementById('passwordMatchError').style.display = 'none';
-    
-    if (!verificationCode) {
-        alert('يرجى إدخال رمز التحقق.');
-        return;
-    }
-    
-    register(email, password, fullName, verificationCode);
-});
-
-document.getElementById('signupForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const fullName = document.getElementById('fullName').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (password !== confirmPassword) {
-        document.getElementById('passwordMatchError').style.display = 'block';
-        return;
-    }
-    document.getElementById('passwordMatchError').style.display = 'none';
-    register(email, password, fullName);
-});    
 </script>
 
 </body>
