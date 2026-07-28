@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>إنشاء حساب - VETM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Cairo', sans-serif; }
+        body { background-color: #f0f2f5; }
+        .brand-red { color: #C62828; }
+        .bg-brand-red { background-color: #C62828; }
+        .btn-red { background-color: #C62828; color: #fff; }
+        .btn-red:hover { background-color: #B71C1C; }
+        .link-red { color: #C62828; }
+        .link-red:hover { text-decoration: underline; }
+        .input-focus:focus { border-color: #C62828; ring-color: #C62828; }
+        .error-message { color: #C62828; font-size: 13px; margin-top: 4px; display: none; }
+    </style>
+</head>
+<body>
+
+<!-- n.138.3 التحذير القانوني -->
+<!--
+⚠️ تحذير قانوني: هذا الكود ملكية خاصة لمشروع VETM™. لا يُسمح بنسخه أو إعادة توزيعه أو استخدامه تجارياً دون موافقة خطية مسبقة.
+-->
+
+<div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8">
+
+        <!-- n.138.4 الشعار والعنوان -->
+        <div class="text-center mb-6">
+            <h1 class="text-4xl font-extrabold brand-red">VETM</h1>
+            <p class="text-sm text-gray-600 mt-1">انشاء حساب VETM</p>
+        </div>
+
+        <!-- n.138.5 رسالة إرشادية (معدلة) -->
+        <div class="text-center mb-6">
+            <p class="text-base font-bold text-gray-700">
+                تم إرسال رمز التحقق إلى بريدك الإلكتروني، يرجى نسخه ولصقه في الحقل المخصص ثم الضغط على الزر التحقق
+            </p>
+        </div>
+
+        <!-- n.138.6 نموذج إدخال الرمز -->
+        <form id="verifyForm" class="space-y-5">
+            <div>
+                <label for="verificationCode" class="block text-sm font-bold text-gray-700 mb-1">أدخل رمز التحقق</label>
+                <input type="text" id="verificationCode" name="verificationCode" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
+                       placeholder="أدخل الرقم المكون من 6 أرقام" maxlength="6" inputmode="numeric">
+                <div id="codeError" class="error-message"></div>
+            </div>
+
+            <button type="submit"
+                    class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition duration-200">
+                تحقق وإنشاء الحساب
+            </button>
+        </form>
+
+        <!-- n.138.7 الروابط السفلية -->
+        <div class="flex items-center gap-4 my-6">
+            <div class="flex-1 h-px bg-gray-300"></div>
+            <div class="w-2 h-2 bg-[#C62828] rounded-full"></div>
+            <div class="flex-1 h-px bg-gray-300"></div>
+        </div>
+
+        <div class="text-center">
+            <a href="login.html" class="link-red font-bold text-sm">
+                لديك حساب بالفعل؟ سجل الدخول هنا
+            </a>
+        </div>
+
+        <p class="text-xs text-gray-400 text-center mt-4">
+            بإنشاء حساب، أنت توافق على شروط الخدمة وسياسة الخصوصية
+        </p>
+    </div>
+</div>
+
+<!-- n.138.8 جافا سكريبت -->
+<script>
+    // n.138.9 رابط الخادم (استبدل بالرابط الفعلي)
+    const API_URL = 'YOUR_WEB_APP_URL_HERE';
+
+    // n.138.10 دالة الاتصال
+    async function callApi(payload) {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        return response.json();
+    }
+
+    // n.138.11 استرجاع البيانات المخزنة مؤقتاً
+    const fullName = sessionStorage.getItem('tempFullName');
+    const email = sessionStorage.getItem('tempEmail');
+    const password = sessionStorage.getItem('tempPassword');
+
+    // n.138.12 إذا لم توجد بيانات، إعادة التوجيه إلى صفحة التسجيل
+    if (!fullName || !email || !password) {
+        window.location.href = 'signup.html';
+    }
+
+    // n.138.13 حدث النموذج (التحقق من الرمز)
+    document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const verificationCode = document.getElementById('verificationCode').value.trim();
+        if (!verificationCode || verificationCode.length !== 6) {
+            document.getElementById('codeError').textContent = '⚠️ يرجى إدخال رمز مكون من 6 أرقام.';
+            document.getElementById('codeError').style.display = 'block';
+            return;
+        }
+
+        // n.138.14 طلب إنشاء الحساب
+        const result = await callApi({
+            action: 'register',
+            email: email,
+            password: password,
+            fullName: fullName,
+            verificationCode: verificationCode
+        });
+
+        if (result.ok) {
+            sessionStorage.removeItem('tempFullName');
+            sessionStorage.removeItem('tempEmail');
+            sessionStorage.removeItem('tempPassword');
+            alert('تم إنشاء الحساب بنجاح.');
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('codeError').textContent = '⚠️ ' + result.error;
+            document.getElementById('codeError').style.display = 'block';
+        }
+    });
+</script>
+
+</body>
+</html>
