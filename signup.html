@@ -29,12 +29,31 @@
             user-select: none;
         }
         .toggle-password:hover { color: #333; }
-        .error-message { color: #C62828; font-size: 13px; margin-top: 4px; display: none; }
+        .error-message {
+            color: #C62828;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+            padding: 8px 12px;
+            background-color: #ffebee;
+            border-radius: 8px;
+            border-right: 4px solid #C62828;
+        }
+        .success-message {
+            color: #2e7d32;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+            padding: 8px 12px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            border-right: 4px solid #2e7d32;
+        }
     </style>
 </head>
 <body>
 
-<!-- n.135.2 التحذير القانوني -->
+<!-- n.179.1 التحذير القانوني -->
 <!--
 ⚠️ تحذير قانوني: هذا الكود ملكية خاصة لمشروع VETM™. لا يُسمح بنسخه أو إعادة توزيعه أو استخدامه تجارياً دون موافقة خطية مسبقة.
 -->
@@ -42,16 +61,16 @@
 <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8">
 
-        <!-- n.135.3 الشعار -->
+        <!-- n.179.2 الشعار -->
         <div class="text-center mb-6">
             <h1 class="text-4xl font-extrabold brand-red">VETM</h1>
             <p class="text-sm text-gray-600 mt-1">انشاء حساب VETM لتتمكن من ادارة بطاقتك المهنية</p>
         </div>
 
-        <!-- n.135.4 نموذج إنشاء الحساب -->
+        <!-- n.179.3 نموذج إنشاء الحساب -->
         <form id="signupForm" class="space-y-5">
 
-            <!-- الاسم الثلاثي -->
+            <!-- n.179.4 الاسم الثلاثي -->
             <div>
                 <label for="fullName" class="block text-sm font-bold text-gray-700 mb-1">الاسم الثلاثي</label>
                 <input type="text" id="fullName" name="fullName" required
@@ -59,7 +78,7 @@
                        placeholder="مثال: أحمد حسين قاسم" autocomplete="name">
             </div>
 
-            <!-- البريد الإلكتروني -->
+            <!-- n.179.5 البريد الإلكتروني -->
             <div>
                 <label for="email" class="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني</label>
                 <input type="email" id="email" name="email" required
@@ -67,7 +86,7 @@
                        placeholder="example@domain.com" autocomplete="email">
             </div>
 
-            <!-- كلمة السر -->
+            <!-- n.179.6 كلمة السر -->
             <div>
                 <label for="password" class="block text-sm font-bold text-gray-700 mb-1">كلمة السر</label>
                 <div class="password-wrapper">
@@ -78,7 +97,7 @@
                 </div>
             </div>
 
-            <!-- تأكيد كلمة السر -->
+            <!-- n.179.7 تأكيد كلمة السر -->
             <div>
                 <label for="confirmPassword" class="block text-sm font-bold text-gray-700 mb-1">تأكيد كلمة السر</label>
                 <div class="password-wrapper">
@@ -90,17 +109,17 @@
                 <div id="passwordMatchError" class="error-message">⚠️ كلمة السر وتأكيدها غير متطابقين.</div>
             </div>
 
-                <!-- n.174.1.1 عنصر عرض رسائل الخطأ العامة -->
-    <div id="signupError" class="error-message" style="margin-bottom: 10px;"></div>
-            
-            <!-- n.135.5 زر إرسال الرمز -->
+            <!-- n.179.8 رسالة الخطأ العامة (للبريد المكرر وغيره) -->
+            <div id="generalError" class="error-message"></div>
+
+            <!-- n.179.9 زر إرسال الرمز -->
             <button type="button" id="sendCodeBtn"
                     class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition duration-200">
                 إرسال رمز إلى بريدك
             </button>
         </form>
 
-        <!-- n.135.6 الفاصل والروابط السفلية -->
+        <!-- n.179.10 الفاصل والروابط السفلية -->
         <div class="flex items-center gap-4 my-6">
             <div class="flex-1 h-px bg-gray-300"></div>
             <div class="w-2 h-2 bg-[#C62828] rounded-full"></div>
@@ -119,12 +138,12 @@
     </div>
 </div>
 
-<!-- n.135.7 جافا سكريبت -->
+<!-- n.179.11 جافا سكريبت -->
 <script>
-    // n.135.8 عنوان الخادم الخلفي (استبدل بالرابط الفعلي)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzrczVOQmx75fpCxqm25gpdhH33rwKEeEcwTZ7aDWhXM5_PyVBGeUXMETx_NII4_Iqk/exec';
+    // n.179.12 عنوان الخادم الخلفي
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzeT7Ii_N5vdl0SJpXnWVwLaacKEpEMTVMpUsIWulV-z1FGDvzovf8Y8-Nsq81htmKP/exec';
 
-    // n.135.9 دالة الاتصال العامة
+    // n.179.13 دالة الاتصال العامة
     async function callApi(payload) {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -134,7 +153,7 @@
         return response.json();
     }
 
-    // n.135.10 دالة إظهار/إخفاء كلمة السر
+    // n.179.14 دالة إظهار/إخفاء كلمة السر
     function togglePasswordVisibility(fieldId) {
         const field = document.getElementById(fieldId);
         const icon = field.parentElement.querySelector('.toggle-password');
@@ -147,17 +166,22 @@
         }
     }
 
-    // n.135.11 حدث زر "إرسال رمز إلى بريدك"
+    // n.179.15 حدث زر "إرسال رمز إلى بريدك"
     document.getElementById('sendCodeBtn').addEventListener('click', async function() {
         const fullName = document.getElementById('fullName').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         const errorDiv = document.getElementById('passwordMatchError');
+        const generalErrorDiv = document.getElementById('generalError');
 
-        // التحقق من صحة المدخلات
+        // n.179.16 إخفاء أي رسائل خطأ سابقة
+        generalErrorDiv.style.display = 'none';
+
+        // n.179.17 التحقق من صحة المدخلات
         if (!fullName || !email || !password || !confirmPassword) {
-            alert('يرجى ملء جميع الحقول.');
+            generalErrorDiv.textContent = '⚠️ يرجى ملء جميع الحقول.';
+            generalErrorDiv.style.display = 'block';
             return;
         }
         if (password !== confirmPassword) {
@@ -166,21 +190,29 @@
         }
         errorDiv.style.display = 'none';
         if (password.length < 8) {
-            alert('كلمة السر يجب أن تكون 8 أحرف على الأقل.');
+            generalErrorDiv.textContent = '⚠️ كلمة السر يجب أن تكون 8 أحرف على الأقل.';
+            generalErrorDiv.style.display = 'block';
             return;
         }
 
-        // طلب إرسال الرمز إلى الخادم
+        // n.179.18 طلب إرسال الرمز إلى الخادم
         const result = await callApi({ action: 'sendVerificationCode', email: email });
+
         if (result.ok) {
-            // تخزين البيانات مؤقتاً للصفحة التالية
+            // n.179.19 تخزين البيانات مؤقتاً للصفحة التالية
             sessionStorage.setItem('tempFullName', fullName);
             sessionStorage.setItem('tempEmail', email);
             sessionStorage.setItem('tempPassword', password);
-            // الانتقال إلى صفحة التحقق
+            // n.179.20 الانتقال إلى صفحة التحقق
             window.location.href = 'verify.html';
         } else {
-            alert('فشل إرسال الرمز: ' + result.error);
+            // n.179.21 عرض رسالة خطأ مخصصة بناءً على نوع الخطأ
+            if (result.error && result.error.includes('email_exists')) {
+                generalErrorDiv.textContent = '⚠️ هذا البريد الإلكتروني مسجل بالفعل. يرجى استخدام بريد آخر أو تسجيل الدخول.';
+            } else {
+                generalErrorDiv.textContent = '⚠️ فشل إرسال الرمز: ' + (result.error || 'خطأ غير معروف');
+            }
+            generalErrorDiv.style.display = 'block';
         }
     });
 </script>
