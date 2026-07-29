@@ -15,24 +15,15 @@
         .btn-red:hover { background-color: #B71C1C; }
         .btn-outline-red { border: 2px solid #C62828; color: #C62828; background: transparent; }
         .btn-outline-red:hover { background-color: #ffebee; }
-        .btn-delete { background-color: #fff; color: #C62828; border: 1px solid #C62828; }
-        .btn-delete:hover { background-color: #ffebee; }
-        .text-muted { color: #9e9e9e; }
+        .link-red { color: #C62828; }
+        .link-red:hover { text-decoration: underline; }
         .card-box { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 16px; margin-bottom: 12px; border-right: 4px solid #C62828; }
         .disabled-option { color: #9e9e9e; pointer-events: none; background-color: #f5f5f5; }
     </style>
 </head>
 <body>
 
-<!-- n.150.3 التحذير القانوني -->
-<!--
-⚠️ تحذير قانوني: هذا الكود ملكية خاصة لمشروع VETM™. لا يُسمح بنسخه أو إعادة توزيعه أو استخدامه تجارياً دون موافقة خطية مسبقة.
--->
-
-<!-- n.150.4 المحتوى الرئيسي (محافظة على التصميم الأصلي) -->
 <div class="min-h-screen flex flex-col items-center px-4 py-4 max-w-md mx-auto w-full">
-
-    <!-- n.150.5 الشريط العلوي الثابت -->
     <header class="sticky top-0 w-full bg-brand-red text-white rounded-b-2xl shadow-lg px-5 py-3 z-10">
         <div class="text-2xl font-extrabold">VETM</div>
         <div id="greetingMessage" class="text-sm opacity-90">مرحباً بالسيد (اسم المهني)</div>
@@ -41,14 +32,11 @@
         </div>
     </header>
 
-    <!-- n.150.6 المحتوى الرئيسي -->
     <div class="w-full mt-4 space-y-4">
 
-        <!-- n.150.7 قسم إنشاء بطاقة جديدة -->
         <div id="createSection" class="bg-white p-5 rounded-2xl shadow-sm">
             <p class="text-sm text-gray-600 mb-3">يمكنك امتلاك حتى 6 بطاقات مهنية مختلفة.</p>
             <label class="block text-sm font-bold text-gray-700 mb-1">اختر تخصصك أو مهنتك</label>
-            <!-- n.150.8 القائمة المنسدلة (سيتم تعبئتها بواسطة JavaScript) -->
             <select id="specialtySelect" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#C62828] mb-3">
                 <option value="">-- اختر تخصصاً --</option>
             </select>
@@ -56,28 +44,21 @@
             <div id="duplicateWarning" class="text-red-600 text-sm font-bold mt-2 hidden">⚠️ انت تملك بطاقة بهذا التخصص ، يمكنك تعديلها او حذفها .</div>
         </div>
 
-        <!-- n.150.9 رسالة الحد الأقصى -->
         <div id="maxLimitMessage" class="bg-yellow-50 p-5 rounded-2xl border border-yellow-200 text-center hidden">
             <p class="text-yellow-800 font-bold">وصلت للحد الأقصى المسموح به (6 بطاقات). يمكنك تحديث أو حذف إحدى بطاقاتك الحالية لإضافة تخصص جديد.</p>
         </div>
 
-        <!-- n.150.10 عرض البطاقات -->
         <div id="cardsContainer" class="bg-white p-5 rounded-2xl shadow-sm">
             <h2 class="text-lg font-bold text-gray-700 mb-3">بطاقاتك المهنية</h2>
-            <div id="cardsList">
-                <!-- n.150.11 سيتم إدراج البطاقات هنا بواسطة JavaScript -->
-            </div>
-            <p id="noCardsMessage" class="text-gray-400 text-center py-8">لا توجد بطاقات حالياً. أنشئ بطاقتك الأولى من خلال القائمة المنسدلة أعلاه.</p>
+            <div id="cardsList"></div>
+            <p id="noCardsMessage" class="text-gray-400 text-center py-8 hidden">لا توجد بطاقات حالياً. أنشئ بطاقتك الأولى من خلال القائمة المنسدلة أعلاه.</p>
         </div>
     </div>
 </div>
 
-<!-- n.150.12 جافا سكريبت (الربط بالخادم) -->
 <script>
-    // n.150.13 رابط الخادم الخلفي (استبدل بالرابط الفعلي)
     const API_URL = 'https://script.google.com/macros/s/AKfycbzrczVOQmx75fpCxqm25gpdhH33rwKEeEcwTZ7aDWhXM5_PyVBGeUXMETx_NII4_Iqk/exec';
 
-    // n.150.14 دالة الاتصال العامة
     async function callApi(payload) {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -87,15 +68,13 @@
         return response.json();
     }
 
-    // n.150.15 دالة تحميل البيانات وعرضها
-    async function loadData() {
+    async function loadCards() {
         const token = sessionStorage.getItem('token');
         if (!token) {
             window.location.href = 'login.html';
             return;
         }
 
-        // n.150.16 جلب الملف الشخصي (الاسم الثلاثي)
         const profile = await callApi({ action: 'getProfile', token });
         if (!profile.ok) {
             sessionStorage.removeItem('token');
@@ -104,7 +83,6 @@
         }
         document.getElementById('greetingMessage').textContent = 'مرحباً بالسيد ' + profile.fullName;
 
-        // n.150.17 جلب التخصصات المتاحة
         const specialtiesData = await callApi({ action: 'getAvailableSpecialties', token });
         if (specialtiesData.ok) {
             const select = document.getElementById('specialtySelect');
@@ -121,7 +99,6 @@
             });
         }
 
-        // n.150.18 جلب البطاقات وعرضها
         const cardsData = await callApi({ action: 'getCards', token });
         const cardsList = document.getElementById('cardsList');
         const noCardsMsg = document.getElementById('noCardsMessage');
@@ -147,7 +124,6 @@
             noCardsMsg.style.display = 'block';
         }
 
-        // n.150.19 التحقق من الحد الأقصى (6 بطاقات)
         const createSection = document.getElementById('createSection');
         const maxLimitMsg = document.getElementById('maxLimitMessage');
         if (cardsData.ok && cardsData.cards.length >= 6) {
@@ -159,20 +135,18 @@
         }
     }
 
-    // n.150.20 دالة حذف بطاقة
     async function deleteCard(cardId) {
         if (!confirm('هل أنت متأكد من حذف هذه البطاقة؟')) return;
         const token = sessionStorage.getItem('token');
         const result = await callApi({ action: 'deleteCard', token, cardId });
         if (result.ok) {
             alert('تم حذف البطاقة بنجاح.');
-            loadData(); // إعادة تحميل القائمة
+            loadCards();
         } else {
             alert('فشل الحذف: ' + result.error);
         }
     }
 
-    // n.150.21 إنشاء بطاقة جديدة (فتح رابط النموذج)
     document.getElementById('createBtn').addEventListener('click', async function() {
         const token = sessionStorage.getItem('token');
         const specialty = document.getElementById('specialtySelect').value;
@@ -189,8 +163,7 @@
         }
     });
 
-    // n.150.22 تشغيل تحميل البيانات عند فتح الصفحة
-    document.addEventListener('DOMContentLoaded', loadData);
+    document.addEventListener('DOMContentLoaded', loadCards);
 </script>
 
 </body>
