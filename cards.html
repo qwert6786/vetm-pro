@@ -13,57 +13,88 @@
         .bg-brand-red { background-color: #C62828; }
         .btn-red { background-color: #C62828; color: #fff; }
         .btn-red:hover { background-color: #B71C1C; }
+        .btn-red:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-outline-red { border: 2px solid #C62828; color: #C62828; background: transparent; }
         .btn-outline-red:hover { background-color: #ffebee; }
         .link-red { color: #C62828; }
         .link-red:hover { text-decoration: underline; }
-        .card-box { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 16px; margin-bottom: 12px; border-right: 4px solid #C62828; }
+        .card-box {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 16px;
+            margin-bottom: 12px;
+            border-right: 4px solid #C62828;
+            transition: transform 0.2s ease;
+        }
+        .card-box:hover { transform: translateY(-2px); }
         .disabled-option { color: #9e9e9e; pointer-events: none; background-color: #f5f5f5; }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #C62828; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 40px 20px; color: #777; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
     </style>
 </head>
 <body>
 
-<!-- n.150.3 التحذير القانوني -->
+<!-- n.208.1 التحذير القانوني -->
 <!--
 ⚠️ تحذير قانوني: هذا الكود ملكية خاصة لمشروع VETM™. لا يُسمح بنسخه أو إعادة توزيعه أو استخدامه تجارياً دون موافقة خطية مسبقة.
 -->
-    
-<div class="min-h-screen flex flex-col items-center px-4 py-4 max-w-md mx-auto w-full">
+
+<main class="min-h-screen flex flex-col items-center px-4 py-4 max-w-md mx-auto w-full">
+
+    <!-- n.208.2 الشريط العلوي -->
     <header class="sticky top-0 w-full bg-brand-red text-white rounded-b-2xl shadow-lg px-5 py-3 z-10">
         <div class="text-2xl font-extrabold">VETM</div>
-        <div id="greetingMessage" class="text-sm opacity-90">مرحباً بالسيد (اسم المهني)</div>
+        <div id="greetingMessage" class="text-sm opacity-90">مرحباً بالسيد (تحميل...)</div>
         <div class="absolute left-5 top-4">
-            <a href="login.html" class="text-white text-sm underline">تسجيل الخروج</a>
+            <a href="login.html" class="text-white text-sm underline hover:opacity-80 transition">تسجيل الخروج</a>
         </div>
     </header>
 
-    <div class="w-full mt-4 space-y-4">
+    <!-- n.208.3 المحتوى الرئيسي -->
+    <section class="w-full mt-4 space-y-4">
 
+        <!-- n.208.4 قسم إنشاء بطاقة جديدة -->
         <div id="createSection" class="bg-white p-5 rounded-2xl shadow-sm">
             <p class="text-sm text-gray-600 mb-3">يمكنك امتلاك حتى 6 بطاقات مهنية مختلفة.</p>
-            <label class="block text-sm font-bold text-gray-700 mb-1">اختر تخصصك أو مهنتك</label>
+            <label for="specialtySelect" class="block text-sm font-bold text-gray-700 mb-1">اختر تخصصك أو مهنتك</label>
             <select id="specialtySelect" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#C62828] mb-3">
                 <option value="">-- اختر تخصصاً --</option>
             </select>
-            <button id="createBtn" class="w-full btn-red font-bold py-3 rounded-xl shadow-md">اضغط لإنشاء بطاقة مهنية جديدة</button>
-            <div id="duplicateWarning" class="text-red-600 text-sm font-bold mt-2 hidden">⚠️ انت تملك بطاقة بهذا التخصص ، يمكنك تعديلها او حذفها .</div>
+            <button id="createBtn" class="w-full btn-red font-bold py-3 rounded-xl shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                اضغط لإنشاء بطاقة مهنية جديدة
+            </button>
+            <div id="duplicateWarning" class="text-red-600 text-sm font-bold mt-2 hidden">⚠️ انت تملك بطاقة بهذا التخصص، يمكنك تعديلها أو حذفها.</div>
+            <div id="createLoading" class="loading-spinner hidden"></div>
         </div>
 
+        <!-- n.208.5 رسالة الحد الأقصى -->
         <div id="maxLimitMessage" class="bg-yellow-50 p-5 rounded-2xl border border-yellow-200 text-center hidden">
             <p class="text-yellow-800 font-bold">وصلت للحد الأقصى المسموح به (6 بطاقات). يمكنك تحديث أو حذف إحدى بطاقاتك الحالية لإضافة تخصص جديد.</p>
         </div>
 
+        <!-- n.208.6 عرض البطاقات -->
         <div id="cardsContainer" class="bg-white p-5 rounded-2xl shadow-sm">
             <h2 class="text-lg font-bold text-gray-700 mb-3">بطاقاتك المهنية</h2>
-            <div id="cardsList"></div>
-            <p id="noCardsMessage" class="text-gray-400 text-center py-8 hidden">لا توجد بطاقات حالياً. أنشئ بطاقتك الأولى من خلال القائمة المنسدلة أعلاه.</p>
+            <div id="cardsList">
+                <div class="loading-spinner"></div>
+            </div>
+            <div id="emptyState" class="empty-state hidden">
+                <div class="icon">📇</div>
+                <p>لا توجد بطاقات حالياً. أنشئ بطاقتك الأولى من خلال القائمة المنسدلة أعلاه.</p>
+            </div>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 
+<!-- n.208.7 جافا سكريبت (منطق منفصل عن العرض) -->
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzrczVOQmx75fpCxqm25gpdhH33rwKEeEcwTZ7aDWhXM5_PyVBGeUXMETx_NII4_Iqk/exec';
+    // n.208.8 عنوان الخادم الخلفي (استبدل بالرابط الفعلي)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyRXyZszU0nRxBIeswYPtVG8BYS1FErSDf-0NmrV6dal_aStsMT_qhPBYwEW9DXPswe/exec';
 
+    // n.208.9 دالة الاتصال العامة
     async function callApi(payload) {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -73,6 +104,47 @@
         return response.json();
     }
 
+    // n.208.10 عناصر الصفحة
+    const elements = {
+        greeting: document.getElementById('greetingMessage'),
+        specialtySelect: document.getElementById('specialtySelect'),
+        createBtn: document.getElementById('createBtn'),
+        duplicateWarning: document.getElementById('duplicateWarning'),
+        createLoading: document.getElementById('createLoading'),
+        maxLimitMsg: document.getElementById('maxLimitMessage'),
+        cardsList: document.getElementById('cardsList'),
+        emptyState: document.getElementById('emptyState'),
+        createSection: document.getElementById('createSection')
+    };
+
+    // n.208.11 دالة عرض البطاقات (UI Render)
+    function renderCards(cards) {
+        const list = elements.cardsList;
+        list.innerHTML = '';
+
+        if (!cards || cards.length === 0) {
+            elements.emptyState.classList.remove('hidden');
+            return;
+        }
+        elements.emptyState.classList.add('hidden');
+
+        cards.forEach(card => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'card-box';
+            cardDiv.innerHTML = `
+                <div class="font-bold text-gray-800">${card.name}</div>
+                <div class="text-gray-600">التخصص: ${card.specialty}</div>
+                <div class="text-xs text-gray-400">الحالة: ${card.status}</div>
+                <div class="flex gap-3 mt-3">
+                    <button class="btn-outline-red px-4 py-1 rounded-lg text-sm font-bold transition hover:bg-red-50" onclick="window.open('${card.editLink}', '_blank')">تحديث</button>
+                    <button class="bg-red-50 text-red-700 px-4 py-1 rounded-lg text-sm font-bold border border-red-200 transition hover:bg-red-100" onclick="deleteCard('${card.cardId}')">حذف</button>
+                </div>
+            `;
+            list.appendChild(cardDiv);
+        });
+    }
+
+    // n.208.12 دالة تحميل البيانات الأساسية
     async function loadCards() {
         const token = sessionStorage.getItem('token');
         if (!token) {
@@ -80,94 +152,110 @@
             return;
         }
 
-        const profile = await callApi({ action: 'getProfile', token });
-        if (!profile.ok) {
-            sessionStorage.removeItem('token');
-            window.location.href = 'login.html';
-            return;
-        }
-        document.getElementById('greetingMessage').textContent = 'مرحباً بالسيد ' + profile.fullName;
+        try {
+            // جلب الملف الشخصي
+            const profile = await callApi({ action: 'getProfile', token });
+            if (!profile.ok) {
+                sessionStorage.removeItem('token');
+                window.location.href = 'login.html';
+                return;
+            }
+            elements.greeting.textContent = 'مرحباً بالسيد ' + profile.fullName;
 
-        const specialtiesData = await callApi({ action: 'getAvailableSpecialties', token });
-        if (specialtiesData.ok) {
-            const select = document.getElementById('specialtySelect');
-            select.innerHTML = '<option value="">-- اختر تخصصاً --</option>';
-            specialtiesData.specialties.forEach(s => {
-                const option = document.createElement('option');
-                option.value = s.name;
-                option.textContent = s.name;
-                if (s.owned) {
-                    option.disabled = true;
-                    option.style.color = '#9e9e9e';
+            // جلب التخصصات المتاحة
+            const specialties = await callApi({ action: 'getAvailableSpecialties', token });
+            if (specialties.ok) {
+                const select = elements.specialtySelect;
+                select.innerHTML = '<option value="">-- اختر تخصصاً --</option>';
+                specialties.specialties.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.name;
+                    opt.textContent = s.name;
+                    if (s.owned) {
+                        opt.disabled = true;
+                        opt.style.color = '#9e9e9e';
+                    }
+                    select.appendChild(opt);
+                });
+                elements.createBtn.disabled = true;
+            }
+
+            // جلب البطاقات
+            const cards = await callApi({ action: 'getCards', token });
+            if (cards.ok) {
+                renderCards(cards.cards);
+                // التحقق من الحد الأقصى
+                const count = cards.cards.length;
+                if (count >= 6) {
+                    elements.createSection.style.display = 'none';
+                    elements.maxLimitMsg.style.display = 'block';
+                } else {
+                    elements.createSection.style.display = 'block';
+                    elements.maxLimitMsg.style.display = 'none';
                 }
-                select.appendChild(option);
-            });
-        }
-
-        const cardsData = await callApi({ action: 'getCards', token });
-        const cardsList = document.getElementById('cardsList');
-        const noCardsMsg = document.getElementById('noCardsMessage');
-        cardsList.innerHTML = '';
-
-        if (cardsData.ok && cardsData.cards.length > 0) {
-            noCardsMsg.style.display = 'none';
-            cardsData.cards.forEach(card => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'card-box';
-                cardDiv.innerHTML = `
-                    <div class="font-bold text-gray-800">${card.name}</div>
-                    <div class="text-gray-600">التخصص: ${card.specialty}</div>
-                    <div class="text-xs text-gray-400">الحالة: ${card.status}</div>
-                    <div class="flex gap-3 mt-3">
-                        <button class="btn-outline-red px-4 py-1 rounded-lg text-sm font-bold" onclick="window.open('${card.editLink}', '_blank')">تحديث</button>
-                        <button class="bg-red-50 text-red-700 px-4 py-1 rounded-lg text-sm font-bold border border-red-200" onclick="deleteCard('${card.cardId}')">حذف</button>
-                    </div>
-                `;
-                cardsList.appendChild(cardDiv);
-            });
-        } else {
-            noCardsMsg.style.display = 'block';
-        }
-
-        const createSection = document.getElementById('createSection');
-        const maxLimitMsg = document.getElementById('maxLimitMessage');
-        if (cardsData.ok && cardsData.cards.length >= 6) {
-            createSection.style.display = 'none';
-            maxLimitMsg.style.display = 'block';
-        } else {
-            createSection.style.display = 'block';
-            maxLimitMsg.style.display = 'none';
+                elements.createBtn.disabled = false;
+            } else {
+                renderCards([]);
+            }
+        } catch (error) {
+            console.error('فشل تحميل البيانات:', error);
+            renderCards([]);
+            alert('حدث خطأ في تحميل البيانات. حاول تحديث الصفحة.');
         }
     }
 
-    async function deleteCard(cardId) {
+    // n.208.13 دالة حذف البطاقة (مع تأكيد)
+    window.deleteCard = async function(cardId) {
         if (!confirm('هل أنت متأكد من حذف هذه البطاقة؟')) return;
         const token = sessionStorage.getItem('token');
-        const result = await callApi({ action: 'deleteCard', token, cardId });
-        if (result.ok) {
-            alert('تم حذف البطاقة بنجاح.');
-            loadCards();
-        } else {
-            alert('فشل الحذف: ' + result.error);
-        }
-    }
+        if (!token) return;
 
-    document.getElementById('createBtn').addEventListener('click', async function() {
+        try {
+            const result = await callApi({ action: 'deleteCard', token, cardId });
+            if (result.ok) {
+                alert('تم حذف البطاقة بنجاح.');
+                loadCards();
+            } else {
+                alert('فشل الحذف: ' + result.error);
+            }
+        } catch (error) {
+            alert('حدث خطأ أثناء الحذف: ' + error.message);
+        }
+    };
+
+    // n.208.14 حدث إنشاء بطاقة جديدة
+    elements.createBtn.addEventListener('click', async function() {
         const token = sessionStorage.getItem('token');
-        const specialty = document.getElementById('specialtySelect').value;
+        const specialty = elements.specialtySelect.value;
         if (!specialty) {
             alert('يرجى اختيار تخصص.');
             return;
         }
 
-        const result = await callApi({ action: 'getPrefilledFormLink', token, specialty });
-        if (result.ok) {
-            window.open(result.link, '_blank');
-        } else {
-            alert('فشل إنشاء الرابط: ' + result.error);
+        elements.createBtn.disabled = true;
+        elements.createLoading.classList.remove('hidden');
+
+        try {
+            const result = await callApi({ action: 'getPrefilledFormLink', token, specialty });
+            if (result.ok) {
+                window.open(result.link, '_blank');
+                elements.duplicateWarning.classList.add('hidden');
+            } else {
+                if (result.error && result.error.includes('duplicate')) {
+                    elements.duplicateWarning.classList.remove('hidden');
+                } else {
+                    alert('فشل إنشاء الرابط: ' + result.error);
+                }
+            }
+        } catch (error) {
+            alert('حدث خطأ: ' + error.message);
+        } finally {
+            elements.createBtn.disabled = false;
+            elements.createLoading.classList.add('hidden');
         }
     });
 
+    // n.208.15 بدء التحميل عند فتح الصفحة
     document.addEventListener('DOMContentLoaded', loadCards);
 </script>
 
