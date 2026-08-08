@@ -1,0 +1,282 @@
+﻿```<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>إنشاء حساب - BEFR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- استدعاء مكتبات Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+    <style>
+        * { font-family: 'Cairo', sans-serif; }
+        body { background-color: #f0f2f5; }
+        .brand-red { color: #C62828; }
+        .bg-brand-red { background-color: #C62828; }
+        .btn-red { background-color: #C62828; color: #fff; }
+        .btn-red:hover { background-color: #B71C1C; }
+        .link-red { color: #C62828; }
+        .link-red:hover { text-decoration: underline; }
+        .input-focus:focus { border-color: #C62828; ring-color: #C62828; }
+        .password-wrapper { position: relative; }
+        .password-wrapper input { padding-left: 48px; }
+        .toggle-password {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            font-size: 20px;
+            user-select: none;
+        }
+        .toggle-password:hover { color: #333; }
+        .error-message {
+            color: #C62828;
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+            padding: 6px 10px;
+            background-color: #ffebee;
+            border-radius: 6px;
+            border-right: 3px solid #C62828;
+        }
+        .success-message {
+            color: #2e7d32;
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+            padding: 6px 10px;
+            background-color: #e8f5e9;
+            border-radius: 6px;
+            border-right: 3px solid #2e7d32;
+        }
+    </style>
+</head>
+<body>
+
+<div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8">
+
+        <!-- الشعار -->
+        <div class="text-center mb-6">
+            <h1 class="text-4xl font-extrabold brand-red">BEFR</h1>
+            <p class="text-sm text-gray-600 mt-1">إنشاء حساب BEFR لتتمكن من إدارة بطاقتك المهنية</p>
+        </div>
+
+        <!-- نموذج إنشاء الحساب -->
+        <form id="signupForm" class="space-y-5">
+
+            <!-- الاسم الثلاثي -->
+            <div>
+                <label for="fullName" class="block text-sm font-bold text-gray-700 mb-1">الاسم الثلاثي</label>
+                <input type="text" id="fullName" name="fullName" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
+                       placeholder="مثال: أحمد حسين قاسم" autocomplete="name">
+            </div>
+
+            <!-- البريد الإلكتروني -->
+            <div>
+                <label for="email" class="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني</label>
+                <input type="email" id="email" name="email" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
+                       placeholder="example@domain.com" autocomplete="email">
+            </div>
+
+            <!-- كلمة السر -->
+            <div>
+                <label for="password" class="block text-sm font-bold text-gray-700 mb-1">كلمة السر</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
+                           placeholder="أدخل كلمة السر" autocomplete="new-password">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('password')">👁️</span>
+                </div>
+            </div>
+
+            <!-- تأكيد كلمة السر -->
+            <div>
+                <label for="confirmPassword" class="block text-sm font-bold text-gray-700 mb-1">تأكيد كلمة السر</label>
+                <div class="password-wrapper">
+                    <input type="password" id="confirmPassword" name="confirmPassword" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
+                           placeholder="أعد كتابة كلمة السر" autocomplete="new-password">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">👁️</span>
+                </div>
+                <div id="passwordMatchError" class="error-message">⚠️ كلمة السر وتأكيدها غير متطابقين.</div>
+            </div>
+
+            <!-- رسائل الحالة -->
+            <div id="generalError" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+
+            <!-- زر إنشاء الحساب الأساسي -->
+            <button type="submit" id="signupBtn"
+                    class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition duration-200">
+                إنشاء الحساب
+            </button>
+        </form>
+
+        <!-- الفاصل -->
+        <div class="flex items-center gap-4 my-6">
+            <div class="flex-1 h-px bg-gray-300"></div>
+            <span class="text-xs text-gray-400">أو</span>
+            <div class="flex-1 h-px bg-gray-300"></div>
+        </div>
+
+        <!-- زر التسجيل بواسطة Google -->
+        <button type="button" id="googleBtn"
+                class="w-full py-3 bg-white border border-gray-300 text-gray-700 font-bold text-lg rounded-xl shadow-sm hover:bg-gray-50 transition duration-200 flex items-center justify-center gap-2">
+            <svg class="w-6 h-6" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.68 1.54 14.98 1 12 1 7.35 1 3.37 3.67 1.39 7.56l3.85 2.99c.9-2.7 3.4-4.51 6.76-4.51z"/>
+                <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.35H12v4.51h6.48c-.29 1.48-1.14 2.73-2.4 3.58l3.73 2.89c2.18-2.01 3.68-4.97 3.68-8.63z"/>
+                <path fill="#FBBC05" d="M5.24 14.55c-.24-.72-.38-1.5-.38-2.3s.14-1.58.38-2.3L1.39 7.56C.5 9.35 0 11.35 0 13.5s.5 4.15 1.39 5.94l3.85-2.89z"/>
+                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.03.69-2.35 1.1-4.23 1.1-3.36 0-5.86-1.81-6.76-4.51L1.39 19.44C3.37 23.33 7.35 23 12 23z"/>
+            </svg>
+            التسجيل باستخدام Google
+        </button>
+
+        <div class="text-center mt-6">
+            <a href="login.html" class="link-red font-bold text-sm">
+                لديك حساب بالفعل؟ سجل الدخول هنا
+            </a>
+        </div>
+
+        <p class="text-xs text-gray-400 text-center mt-4">
+            بإنشاء حساب، أنت توافق على شروط الخدمة وسياسة الخصوصية
+        </p>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
+  authDomain: "befr-app.firebaseapp.com",
+  projectId: "befr-app",
+  storageBucket: "befr-app.firebasestorage.app",
+  messagingSenderId: "617082363952",
+  appId: "1:617082363952:web:d7cc9365a02f3e23368df5"
+};
+
+    // 2. تهيئة Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+
+    // دالة إظهار/إخفاء كلمة السر
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.parentElement.querySelector('.toggle-password');
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.textContent = '🙈';
+        } else {
+            field.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+
+    // عناصر الصفحة
+    const signupForm = document.getElementById('signupForm');
+    const generalError = document.getElementById('generalError');
+    const successMessage = document.getElementById('successMessage');
+    const passwordMatchError = document.getElementById('passwordMatchError');
+    const googleBtn = document.getElementById('googleBtn');
+
+    // الحدث عند إرسال النموذج (البريد الإلكتروني وكلمة السر)
+    signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault(); // منع تحديث الصفحة الافتراضي
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // إخفاء الرسائل السابقة
+        generalError.style.display = 'none';
+        successMessage.style.display = 'none';
+        passwordMatchError.style.display = 'none';
+
+        // التحقق من تطابق كلمتي السر
+        if (password !== confirmPassword) {
+            passwordMatchError.style.display = 'block';
+            return;
+        }
+
+        try {
+            // إنشاء الحساب في Firebase Auth
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // تحديث الاسم الثلاثي للمستخدم في ملفه الشخصي على Firebase
+            await user.updateProfile({
+                displayName: fullName
+            });
+
+            // نجاح العملية
+            successMessage.textContent = '🎉 تم إنشاء الحساب بنجاح! جاري تحويلك...';
+            successMessage.style.display = 'block';
+
+            // توجيه المستخدم إلى الصفحة الرئيسية أو لوحة التحكم بعد ثانيتين
+            setTimeout(() => {
+                window.location.href = 'index.html'; 
+            }, 2000);
+
+        } catch (error) {
+            // معالجة أخطاء Firebase وعرض رسائل باللغة العربية
+            generalError.style.display = 'block';
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    generalError.textContent = '⚠️ هذا البريد الإلكتروني مسجل بالفعل لاستخدام حساب آخر.';
+                    break;
+                case 'auth/invalid-email':
+                    generalError.textContent = '⚠️ البريد الإلكتروني المدخل غير صالح.';
+                    break;
+                case 'auth/weak-password':
+                    generalError.textContent = '⚠️ كلمة السر ضعيفة جداً. يجب أن تتكون من 6 أحرف على الأقل.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    generalError.textContent = '⚠️ خيار التسجيل بالبريد وكلمة السر غير مفعل حالياً.';
+                    break;
+                default:
+                    generalError.textContent = '⚠️ حدث خطأ أثناء التسجيل: ' + error.message;
+            }
+        }
+    });
+
+    // تسجيل الدخول أو إنشاء حساب عبر Google
+    googleBtn.addEventListener('click', async function() {
+        generalError.style.display = 'none';
+        successMessage.style.display = 'none';
+
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        try {
+            const result = await auth.signInWithPopup(provider);
+            const user = result.user;
+
+            successMessage.textContent = `🎉 مرحباً بك يا ${user.displayName}! تم التسجيل بنجاح.`;
+            successMessage.style.display = 'block';
+
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+
+        } catch (error) {
+            generalError.style.display = 'block';
+            if (error.code === 'auth/popup-closed-by-user') {
+                generalError.textContent = '⚠️ تم إغلاق نافذة تسجيل Google قبل إكمال العملية.';
+            } else {
+                generalError.textContent = '⚠️ فشل التسجيل عبر Google: ' + error.message;
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
+```
