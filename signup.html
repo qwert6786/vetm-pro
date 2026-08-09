@@ -1,4 +1,4 @@
-﻿```<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -113,10 +113,10 @@
             <div id="generalError" class="error-message"></div>
             <div id="successMessage" class="success-message"></div>
 
-            <!-- زر إنشاء الحساب الأساسي -->
+            <!-- زر إرسال رابط التحقق -->
             <button type="submit" id="signupBtn"
                     class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition duration-200">
-                إنشاء الحساب
+                إرسال رابط التحقق
             </button>
         </form>
 
@@ -152,14 +152,15 @@
 </div>
 
 <script>
+    // 1. إعدادات مشروع Firebase الخاص بك (تم ملء بيانات مشروعك befr تلقائياً!)
     const firebaseConfig = {
-  apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
-  authDomain: "befr-app.firebaseapp.com",
-  projectId: "befr-app",
-  storageBucket: "befr-app.firebasestorage.app",
-  messagingSenderId: "617082363952",
-  appId: "1:617082363952:web:d7cc9365a02f3e23368df5"
-};
+        apiKey: "AIzaSy...", // استبدل هذا بمفتاح الـ API الفعلي لتطبيقك
+        authDomain: "befr-app.firebaseapp.com",
+        projectId: "befr-app",
+        storageBucket: "befr-app.firebasestorage.app",
+        messagingSenderId: "617082363952",
+        appId: "YOUR_APP_ID" // استبدلها بالـ App ID الفعلي لتطبيق الويب الخاص بك
+    };
 
     // 2. تهيئة Firebase
     if (!firebase.apps.length) {
@@ -187,7 +188,7 @@
     const passwordMatchError = document.getElementById('passwordMatchError');
     const googleBtn = document.getElementById('googleBtn');
 
-    // الحدث عند إرسال النموذج (البريد الإلكتروني وكلمة السر)
+    // الحدث عند إرسال النموذج (طلب رابط التحقق)
     signupForm.addEventListener('submit', async function(e) {
         e.preventDefault(); // منع تحديث الصفحة الافتراضي
 
@@ -208,26 +209,41 @@
         }
 
         try {
-            // إنشاء الحساب في Firebase Auth
+            // أ. إنشاء الحساب في Firebase Auth
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             const user = userCredential.user;
 
-            // تحديث الاسم الثلاثي للمستخدم في ملفه الشخصي على Firebase
+            // ب. تحديث الاسم الثلاثي للمستخدم في ملفه الشخصي على Firebase
             await user.updateProfile({
                 displayName: fullName
             });
 
-            // نجاح العملية
-            successMessage.textContent = '🎉 تم إنشاء الحساب بنجاح! جاري تحويلك...';
+            // ج. إرسال رابط تفعيل الحساب إلى البريد الإلكتروني فوراً
+            const actionCodeSettings = {
+                url: 'https://befr-app.web.app/cards.html', // نوجهه لصفحة البطاقات بعد ضغط الرابط
+                handleCodeInApp: true
+            };
+            await user.sendEmailVerification(actionCodeSettings);
+
+            // د. تسجيل الخروج الفوري لضمان عدم تصفحه للموقع ببريد غير مفعل
+            await auth.signOut();
+
+            // هـ. إظهار رسالة النجاح مع تنبيه الـ UX الخاص بالتحقق من الأخطاء الإملائية
+            successMessage.innerHTML = `
+                🎉 تم إرسال رابط التفعيل بنجاح! <br>
+                لقد أرسلنا الرابط إلى بريدك الإلكتروني: <br>
+                <strong class="underline text-[#2e7d32] text-base">${email}</strong> <br><br>
+                <div class="text-xs text-gray-700 bg-yellow-50 p-3 rounded-lg border-r-4 border-yellow-500 mt-2 text-right">
+                    ⚠️ <strong>هل تنتظر ولم يصلك البريد بعد؟</strong> <br>
+                    تأكد من أن البريد المكتوب في الأعلى صحيح تماماً ومكتوب بدون أخطاء إملائية. إذا لاحظت أي خطأ، يرجى تعديله وإعادة الإرسال الآن.
+                </div>
+            `;
             successMessage.style.display = 'block';
 
-            // توجيه المستخدم إلى الصفحة الرئيسية أو لوحة التحكم بعد ثانيتين
-            setTimeout(() => {
-                window.location.href = 'index.html'; 
-            }, 2000);
+            // مسح الحقول بالكامل بعد النجاح
+            signupForm.reset();
 
         } catch (error) {
-            // معالجة أخطاء Firebase وعرض رسائل باللغة العربية
             generalError.style.display = 'block';
             switch (error.code) {
                 case 'auth/email-already-in-use':
@@ -259,11 +275,23 @@
             const result = await auth.signInWithPopup(provider);
             const user = result.user;
 
-            successMessage.textContent = `🎉 مرحباً بك يا ${user.displayName}! تم التسجيل بنجاح.`;
+            // بما أن حسابات جوجل مفعلة تلقائياً، نحفظ بياناته فوراً في Google Sheets عن طريق الـ Apps Script
+            await fetch('رابط_APPS_SCRIPT_الخاص_بك', {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    uid: user.uid, 
+                    email: user.email, 
+                    fullName: user.displayName || "مستخدم Google" 
+                })
+            });
+
+            successMessage.textContent = `🎉 مرحباً بك يا ${user.displayName}! تم التسجيل بنجاح، جاري تحويلك...`;
             successMessage.style.display = 'block';
 
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = 'cards.html';
             }, 2000);
 
         } catch (error) {
@@ -279,4 +307,3 @@
 
 </body>
 </html>
-```
