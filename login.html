@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>تسجيل الدخول - VETM</title>
+    <!-- n.212.1 استيراد Tailwind CSS عبر CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- n.212.2 استيراد خط Cairo من Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- استدعاء مكتبات Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+    <style>
+        /* n.212.3 تنسيقات عامة وتجاوزات Tailwind */
+        * { font-family: 'Cairo', sans-serif; }
+        body { background-color: #f0f2f5; }
+        .brand-red { color: #C62828; }
+        .bg-brand-red { background-color: #C62828; }
+        .btn-red {
+            background-color: #C62828;
+            color: #fff;
+            transition: all 0.2s ease;
+        }
+        .btn-red:hover:not(:disabled) { background-color: #B71C1C; }
+        .btn-red:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-outline-red {
+            border: 2px solid #C62828;
+            color: #C62828;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-red:hover { background-color: #ffebee; }
+        .link-red { color: #C62828; }
+        .link-red:hover { text-decoration: underline; }
+        .input-focus:focus {
+            border-color: #C62828;
+            ring-color: #C62828;
+        }
+        .password-wrapper { position: relative; }
+        .password-wrapper input { padding-left: 48px; }
+        .toggle-password {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            font-size: 20px;
+            user-select: none;
+            transition: color 0.2s;
+        }
+        .toggle-password:hover { color: #333; }
+        .divider-line { background-color: #ddd; height: 1px; flex: 1; }
+        .divider-circle {
+            background-color: #C62828;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #C62828;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message {
+            color: #C62828;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+            padding: 6px 12px;
+            background-color: #ffebee;
+            border-radius: 6px;
+            border-right: 3px solid #C62828;
+        }
+        .success-message {
+            color: #2e7d32;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+            padding: 6px 12px;
+            background-color: #e8f5e9;
+            border-radius: 6px;
+            border-right: 3px solid #2e7d32;
+        }
+    </style>
+</head>
+<body>
+
+<!-- n.212.4 التحذير القانوني -->
+<!--
+⚠️ تحذير قانوني: هذا الكود ملكية خاصة لمشروع VETM™. لا يُسمح بنسخه أو إعادة توزيعه أو استخدامه تجارياً دون موافقة خطية مسبقة.
+-->
+
+<main class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8">
+
+        <!-- n.212.5 الشعار -->
+        <header class="text-center mb-6">
+            <h1 class="text-4xl font-extrabold brand-red">VETM</h1>
+            <p class="text-sm text-gray-600 mt-1">تتيح لك VETM إنشاء بطاقات مهنية مستقلة لكل تخصصاتك</p>
+        </header>
+
+        <!-- n.212.6 نموذج تسجيل الدخول -->
+        <form id="loginForm" class="space-y-5" novalidate>
+
+            <!-- n.212.7 حقل البريد الإلكتروني -->
+            <div>
+                <label for="email" class="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني</label>
+                <input type="email" id="email" name="email" required
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
+                       placeholder="example@domain.com" autocomplete="email" aria-required="true">
+                <div id="emailError" class="error-message">⚠️ يرجى إدخال بريد إلكتروني صحيح.</div>
+            </div>
+
+            <!-- n.212.8 حقل كلمة السر -->
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <label for="password" class="text-sm font-bold text-gray-700">كلمة السر</label>
+                    <a href="reset-password.html" class="text-xs link-red font-medium hover:underline transition">هل نسيت كلمة السر؟</a>
+                </div>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
+                           placeholder="أدخل كلمة السر" autocomplete="current-password" aria-required="true">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('password')" role="button" aria-label="إظهار أو إخفاء كلمة السر">👁️</span>
+                </div>
+                <div id="passwordError" class="error-message">⚠️ كلمة السر مطلوبة.</div>
+            </div>
+
+            <!-- n.212.9 زر تسجيل الدخول -->
+            <button type="submit" id="loginBtn"
+                    class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                تسجيل الدخول
+            </button>
+
+            <!-- n.212.10 رسائل النجاح والخطأ العامة -->
+            <div id="generalError" class="error-message"></div>
+            <div id="generalSuccess" class="success-message"></div>
+
+            <!-- n.212.11 حالة تحميل (تظهر عند الضغط) -->
+            <div id="loginLoading" class="flex justify-center items-center gap-3 hidden">
+                <div class="loading-spinner"></div>
+                <span class="text-sm text-gray-600">جاري تسجيل الدخول...</span>
+            </div>
+        </form>
+
+        <!-- n.212.12 الفاصل الأفقي -->
+        <div class="flex items-center gap-4 my-6" role="separator" aria-label="فاصل">
+            <div class="divider-line"></div>
+            <div class="divider-circle"></div>
+            <div class="divider-line"></div>
+        </div>
+
+        <!-- n.212.13 زر إنشاء حساب جديد -->
+        <div class="text-center">
+            <a href="signup.html" class="w-full inline-block py-3 px-4 border-2 border-brand-red text-brand-red font-bold text-lg rounded-xl hover:bg-red-50 transition duration-200">
+                إنشاء حساب جديد
+            </a>
+            <p class="text-xs text-gray-500 mt-3">بإنشاء حساب، أنت توافق على شروط الخدمة وسياسة الخصوصية</p>
+        </div>
+
+        <!-- n.212.14 حقوق النشر والتذييل -->
+        <footer class="mt-6 text-center text-xs text-gray-400 border-t border-gray-200 pt-4">
+            <p>© 2026 VETM™. جميع الحقوق محفوظة.</p>
+        </footer>
+    </div>
+</main>
+
+<!-- n.212.15 جافا سكريبت (منطق منفصل عن العرض) -->
+<script>
+    // 1. إعدادات مشروع Firebase الخاص بك (befr)
+    const firebaseConfig = {
+        apiKey: "AIzaSy...", // استبدل هذا بمفتاح الـ API الفعلي لتطبيقك
+        authDomain: "befr-app.firebaseapp.com",
+        projectId: "befr-app",
+        storageBucket: "befr-app.firebasestorage.app",
+        messagingSenderId: "617082363952",
+        appId: "YOUR_APP_ID" // استبدلها بالـ App ID الفعلي لتطبيق الويب الخاص بك
+    };
+
+    // 2. تهيئة Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+
+    // n.212.17 عناصر الصفحة
+    const elements = {
+        form: document.getElementById('loginForm'),
+        email: document.getElementById('email'),
+        password: document.getElementById('password'),
+        loginBtn: document.getElementById('loginBtn'),
+        loading: document.getElementById('loginLoading'),
+        generalError: document.getElementById('generalError'),
+        generalSuccess: document.getElementById('generalSuccess'),
+        emailError: document.getElementById('emailError'),
+        passwordError: document.getElementById('passwordError')
+    };
+
+    // n.212.19 دالة إظهار/إخفاء كلمة السر
+    window.togglePasswordVisibility = function(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.parentElement.querySelector('.toggle-password');
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.textContent = '🙈';
+            icon.setAttribute('aria-label', 'إخفاء كلمة السر');
+        } else {
+            field.type = 'password';
+            icon.textContent = '👁️';
+            icon.setAttribute('aria-label', 'إظهار كلمة السر');
+        }
+    };
+
+    // n.212.20 دالة التحقق من صحة النموذج (UI)
+    function validateForm() {
+        let isValid = true;
+
+        // n.212.21 التحقق من البريد
+        const email = elements.email.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            elements.emailError.style.display = 'block';
+            isValid = false;
+        } else {
+            elements.emailError.style.display = 'none';
+        }
+
+        // n.212.22 التحقق من كلمة السر
+        if (!elements.password.value.trim()) {
+            elements.passwordError.style.display = 'block';
+            isValid = false;
+        } else {
+            elements.passwordError.style.display = 'none';
+        }
+
+        return isValid;
+    }
+
+    // n.212.23 دالة تنظيف الرسائل السابقة
+    function clearMessages() {
+        elements.generalError.style.display = 'none';
+        elements.generalSuccess.style.display = 'none';
+        elements.emailError.style.display = 'none';
+        elements.passwordError.style.display = 'none';
+    }
+
+    // n.212.24 دالة تسجيل الدخول (المنطق الأساسي باستخدام Firebase Auth)
+    async function login(email, password) {
+        clearMessages();
+
+        // n.212.25 إظهار حالة التحميل
+        elements.loginBtn.disabled = true;
+        elements.loading.classList.remove('hidden');
+
+        try {
+            // تسجيل الدخول الفعلي عبر Firebase Auth
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // التحقق الأمني: إذا كان البريد غير مفعّل، نمنعه من الدخول ونطلب منه التفعيل
+            if (!user.emailVerified) {
+                elements.generalError.textContent = '⚠️ حسابك غير مفعّل! يرجى الضغط على رابط التفعيل المرسل إلى بريدك الإلكتروني أولاً لتفعيل حسابك.';
+                elements.generalError.style.display = 'block';
+                await auth.signOut(); // تسجيل خروجه أمنياً فوراً
+            } else {
+                // تفعيل ناجح وبريد موثق
+                elements.generalSuccess.textContent = '✅ تم تسجيل الدخول بنجاح. جاري التوجيه...';
+                elements.generalSuccess.style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = 'cards.html';
+                }, 500);
+            }
+        } catch (error) {
+            let errorMsg = 'فشل تسجيل الدخول: ';
+            switch (error.code) {
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                case 'auth/invalid-credential':
+                    errorMsg += 'البريد الإلكتروني أو كلمة السر غير صحيحة. يرجى المحاولة مرة أخرى.';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMsg += 'لقد تم حظر المحاولات مؤقتاً لسلامتك. يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.';
+                    break;
+                default:
+                    errorMsg += error.message;
+            }
+            elements.generalError.textContent = '⚠️ ' + errorMsg;
+            elements.generalError.style.display = 'block';
+        } finally {
+            // n.212.29 إخفاء حالة التحميل
+            elements.loginBtn.disabled = false;
+            elements.loading.classList.add('hidden');
+        }
+    }
+
+    // n.212.30 حدث إرسال النموذج
+    elements.form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!validateForm()) return;
+        const email = elements.email.value.trim();
+        const password = elements.password.value;
+        login(email, password);
+    });
+
+    // n.212.31 تحسين UX: الضغط على Enter في حقل كلمة السر
+    elements.password.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            elements.form.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // n.212.32 تحسين UX: مسح رسائل الخطأ عند الكتابة
+    elements.email.addEventListener('input', function() {
+        elements.emailError.style.display = 'none';
+        elements.generalError.style.display = 'none';
+    });
+    elements.password.addEventListener('input', function() {
+        elements.passwordError.style.display = 'none';
+        elements.generalError.style.display = 'none';
+    });
+</script>
+
+</body>
+</html>
