@@ -144,6 +144,12 @@
 </div>
 
 <script>
+    function togglePasswordVisibility(fieldId) {
+  const f = document.getElementById(fieldId);
+  const icon = f.parentElement.querySelector('.toggle-password');
+  if (f.type === 'password') { f.type = 'text'; icon.textContent = '🙈'; }
+  else { f.type = 'password'; icon.textContent = '👁️'; }
+}
     const firebaseConfig = {
   apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
   authDomain: "befr-app.firebaseapp.com",
