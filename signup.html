@@ -177,7 +177,9 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     await user.sendEmailVerification(actionCodeSettings);
     await auth.signOut();
     successEl.innerHTML = `🎉 تم إرسال رابط التفعيل بنجاح! <br>الرجاء فتح بريدك الإلكتروني: <br><strong class="underline">${email}</strong><br>والضغط على رابط التفعيل المرفق لتنشيط حسابك قبل تسجيل الدخول.`;
-    successEl.style.display = 'block'; signupForm.reset();
+    successEl.style.display = 'block';
+signupForm.reset();
+setTimeout(() => { window.location.href = 'login.html'; }, 5000);
   } catch (error) {
     errorEl.style.display = 'block'; errorEl.textContent = '⚠️ حدث خطأ: ' + error.message;
   }
