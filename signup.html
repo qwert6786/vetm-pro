@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>إنشاء حساب - BEFR</title>
+    <title>بطاقاتي المهنية - PEFR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
     
@@ -18,176 +18,214 @@
         .bg-brand-red { background-color: #C62828; }
         .btn-red { background-color: #C62828; color: #fff; }
         .btn-red:hover { background-color: #B71C1C; }
+        .btn-red:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-outline-red { border: 2px solid #C62828; color: #C62828; background: transparent; }
+        .btn-outline-red:hover { background-color: #ffebee; }
         .link-red { color: #C62828; }
         .link-red:hover { text-decoration: underline; }
-        .input-focus:focus { border-color: #C62828; ring-color: #C62828; }
-        .password-wrapper { position: relative; }
-        .password-wrapper input { padding-left: 48px; }
-        .toggle-password {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #888;
-            font-size: 20px;
-            user-select: none;
+        .card-box {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 16px;
+            margin-bottom: 12px;
+            border-right: 4px solid #C62828;
+            transition: transform 0.2s ease;
         }
-        .toggle-password:hover { color: #333; }
-        .error-message {
-            color: #C62828;
-            font-size: 13px;
-            margin-top: 4px;
-            display: none;
-            padding: 6px 10px;
-            background-color: #ffebee;
-            border-radius: 6px;
-            border-right: 3px solid #C62828;
-        }
-        .success-message {
-            color: #2e7d32;
-            font-size: 13px;
-            margin-top: 4px;
-            display: none;
-            padding: 6px 10px;
-            background-color: #e8f5e9;
-            border-radius: 6px;
-            border-right: 3px solid #2e7d32;
-        }
+        .card-box:hover { transform: translateY(-2px); }
+        .disabled-option { color: #9e9e9e; pointer-events: none; background-color: #f5f5f5; }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #C62828; border-radius: 50%; width: 24px; height: 24px; animation: spin 0.8s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 40px 20px; color: #777; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
     </style>
 </head>
 <body>
 
-<div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 md:p-8">
+<main class="min-h-screen flex flex-col items-center px-4 py-4 max-w-md mx-auto w-full">
 
-        <!-- الشعار -->
-        <div class="text-center mb-6">
-            <h1 class="text-4xl font-extrabold brand-red">BEFR</h1>
-            <p class="text-sm text-gray-600 mt-1">إنشاء حساب BEFR لتتمكن من إدارة بطاقتك المهنية</p>
+    <header class="sticky top-0 w-full bg-brand-red text-white rounded-b-2xl shadow-lg px-5 py-3 z-10">
+        <div class="text-2xl font-extrabold">PEFR</div>
+        <div id="greetingMessage" class="text-sm opacity-90">مرحباً بالسيد (تحميل...)</div>
+        <div class="absolute left-5 top-4">
+            <button id="logoutBtn" class="text-white text-sm underline hover:opacity-80 transition bg-transparent border-none cursor-pointer">تسجيل الخروج</button>
         </div>
+    </header>
 
-        <!-- نموذج إنشاء الحساب -->
-        <form id="signupForm" class="space-y-5">
+    <section class="w-full mt-4 space-y-4">
 
-            <!-- البريد الإلكتروني -->
-            <div>
-                <label for="email" class="block text-sm font-bold text-gray-700 mb-1">البريد الإلكتروني</label>
-                <input type="email" id="email" name="email" required
-                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
-                       placeholder="example@domain.com" autocomplete="email">
-            </div>
-
-            <!-- كلمة السر -->
-            <div>
-                <label for="password" class="block text-sm font-bold text-gray-700 mb-1">كلمة السر</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" name="password" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
-                           placeholder="أدخل كلمة السر" autocomplete="new-password">
-                    <span class="toggle-password" onclick="togglePasswordVisibility('password')">👁️</span>
-                </div>
-            </div>
-
-            <!-- تأكيد كلمة السر -->
-            <div>
-                <label for="confirmPassword" class="block text-sm font-bold text-gray-700 mb-1">تأكيد كلمة السر</label>
-                <div class="password-wrapper">
-                    <input type="password" id="confirmPassword" name="confirmPassword" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C62828] focus:border-transparent transition"
-                           placeholder="أعد كتابة كلمة السر" autocomplete="new-password">
-                    <span class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">👁️</span>
-                </div>
-                <div id="passwordMatchError" class="error-message">⚠️ كلمة السر وتأكيدها غير متطابقين.</div>
-            </div>
-
-            <!-- رسائل الحالة -->
-            <div id="generalError" class="error-message"></div>
-            <div id="successMessage" class="success-message"></div>
-
-            <!-- زر إرسال رابط التحقق -->
-            <button type="submit" id="signupBtn"
-                    class="w-full py-3 btn-red font-bold text-lg rounded-xl shadow-md hover:shadow-lg transition duration-200">
-                إرسال رابط التحقق
+        <div id="createSection" class="bg-white p-5 rounded-2xl shadow-sm">
+            <p class="text-sm text-gray-600 mb-3">يمكنك امتلاك حتى 6 بطاقات مهنية مختلفة.</p>
+            <label for="specialtySelect" class="block text-sm font-bold text-gray-700 mb-1">اختر تخصصك أو مهنتك</label>
+            <select id="specialtySelect" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#C62828] mb-3">
+                <option value="">-- اختر تخصصاً --</option>
+            </select>
+            <button id="createBtn" class="w-full btn-red font-bold py-3 rounded-xl shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                اضغط لإنشاء بطاقة مهنية جديدة
             </button>
-        </form>
-
-        <!-- الفاصل -->
-        <div class="flex items-center gap-4 my-6">
-            <div class="flex-1 h-px bg-gray-300"></div>
-            <span class="text-xs text-gray-400">أو</span>
-            <div class="flex-1 h-px bg-gray-300"></div>
+            <div id="duplicateWarning" class="text-red-600 text-sm font-bold mt-2 hidden">⚠️ انت تملك بطاقة بهذا التخصص، يمكنك تعديلها أو حذفها.</div>
+            <div id="createLoading" class="loading-spinner hidden"></div>
         </div>
 
-        <!-- زر التسجيل بواسطة Google -->
-        <button type="button" id="googleBtn"
-                class="w-full py-3 bg-white border border-gray-300 text-gray-700 font-bold text-lg rounded-xl shadow-sm hover:bg-gray-50 transition duration-200 flex items-center justify-center gap-2">
-            <svg class="w-6 h-6" viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.68 1.54 14.98 1 12 1 7.35 1 3.37 3.67 1.39 7.56l3.85 2.99c.9-2.7 3.4-4.51 6.76-4.51z"/>
-                <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.35H12v4.51h6.48c-.29 1.48-1.14 2.73-2.4 3.58l3.73 2.89c2.18-2.01 3.68-4.97 3.68-8.63z"/>
-                <path fill="#FBBC05" d="M5.24 14.55c-.24-.72-.38-1.5-.38-2.3s.14-1.58.38-2.3L1.39 7.56C.5 9.35 0 11.35 0 13.5s.5 4.15 1.39 5.94l3.85-2.89z"/>
-                <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.03.69-2.35 1.1-4.23 1.1-3.36 0-5.86-1.81-6.76-4.51L1.39 19.44C3.37 23.33 7.35 23 12 23z"/>
-            </svg>
-            التسجيل باستخدام Google
-        </button>
-
-        <div class="text-center mt-6">
-            <a href="login.html" class="link-red font-bold text-sm">
-                لديك حساب بالفعل؟ سجل الدخول هنا
-            </a>
+        <div id="maxLimitMessage" class="bg-yellow-50 p-5 rounded-2xl border border-yellow-200 text-center hidden">
+            <p class="text-yellow-800 font-bold">وصلت للحد الأقصى المسموح به (6 بطاقات). يمكنك تحديث أو حذف إحدى بطاقاتك الحالية لإضافة تخصص جديد.</p>
         </div>
 
-        <p class="text-xs text-gray-400 text-center mt-4">
-            بإنشاء حساب، أنت توافق على شروط الخدمة وسياسة الخصوصية
-        </p>
-    </div>
-</div>
+        <div id="cardsContainer" class="bg-white p-5 rounded-2xl shadow-sm">
+            <h2 class="text-lg font-bold text-gray-700 mb-3">بطاقاتك المهنية</h2>
+            <div id="cardsList">
+                <div class="loading-spinner"></div>
+            </div>
+            <div id="emptyState" class="empty-state hidden">
+                <div class="icon">📇</div>
+                <p>لا توجد بطاقات حالياً. أنشئ بطاقتك الأولى من خلال القائمة المنسدلة أعلاه.</p>
+            </div>
+        </div>
+    </section>
+</main>
 
 <script>
-    function togglePasswordVisibility(fieldId) {
-  const f = document.getElementById(fieldId);
-  const icon = f.parentElement.querySelector('.toggle-password');
-  if (f.type === 'password') { f.type = 'text'; icon.textContent = '🙈'; }
-  else { f.type = 'password'; icon.textContent = '👁️'; }
-}
-    const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
   authDomain: "befr-app.firebaseapp.com",
   projectId: "befr-app",
   storageBucket: "befr-app.firebasestorage.app",
-  messagingSenderId: "617082363952",
+  messagingSenderId: "617082363952", // تم تعديله لمطابقة حسابك befr-app
   appId: "1:617082363952:web:d7cc9365a02f3e23368df5"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const confirmPassword = document.getElementById('confirmPassword').value;
-  const errorEl = document.getElementById('generalError'), successEl = document.getElementById('successMessage');
-  errorEl.style.display = 'none'; successEl.style.display = 'none';
-  if (password !== confirmPassword) {
-    document.getElementById('passwordMatchError').style.display = 'block'; return;
-  }
-  try {
-    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-    const user = userCredential.user;
-    const actionCodeSettings = { 
-  url: '{يرجى من المستخدم: وضع رابط صفحة login.html الفعلية الخاصة بك على GitHub Pages هنا}', 
-  handleCodeInApp: true 
+const API_URL = 'https://script.google.com/macros/s/AKfycbwZ1N6iNf2s9whYw27HX49IX4c0AGKGq843t-zIswliEiuDVyEzK0BGLTtRhunZGv_w/exec';
+
+const elements = {
+  greeting: document.getElementById('greetingMessage'), specialtySelect: document.getElementById('specialtySelect'),
+  createBtn: document.getElementById('createBtn'), duplicateWarning: document.getElementById('duplicateWarning'),
+  createLoading: document.getElementById('createLoading'), maxLimitMsg: document.getElementById('maxLimitMessage'),
+  cardsList: document.getElementById('cardsList'), emptyState: document.getElementById('emptyState'),
+  createSection: document.getElementById('createSection'), logoutBtn: document.getElementById('logoutBtn')
 };
-    await user.sendEmailVerification(actionCodeSettings);
-    await auth.signOut();
-    successEl.innerHTML = `🎉 تم إرسال رابط التفعيل بنجاح! <br>الرجاء فتح بريدك الإلكتروني: <br><strong class="underline">${email}</strong><br>والضغط على رابط التفعيل المرفق لتنشيط حسابك قبل تسجيل الدخول.`;
-    successEl.style.display = 'block';
-signupForm.reset();
-setTimeout(() => { window.location.href = 'login.html'; }, 5000);
-  } catch (error) {
-    errorEl.style.display = 'block'; errorEl.textContent = '⚠️ حدث خطأ: ' + error.message;
-  }
+let currentUserEmail = '';
+
+async function callApi(payload) {
+  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+  return r.json();
+}
+
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    if (!user.emailVerified) { auth.signOut().then(() => { window.location.href = 'login.html'; }); }
+    else { currentUserEmail = user.email; loadCardsData(); }
+  } else { window.location.href = 'login.html'; }
 });
 
+elements.logoutBtn.addEventListener('click', async () => { await auth.signOut(); window.location.href = 'login.html'; });
+
+async function loadCardsData() {
+  try {
+    const specialtiesReq = callApi({ action: 'getAvailableSpecialties', email: currentUserEmail });
+    const cardsReq = callApi({ action: 'getCards', email: currentUserEmail });
+    const [specialties, cards] = await Promise.all([specialtiesReq, cardsReq]);
+    if (cards.ok) {
+      elements.greeting.textContent = cards.fullName ? 'مرحباً بالسيد | ' + cards.fullName : 'مرحباً بالمهني';
+      handleUserStatus(cards.infoStatus, cards.infoEditLink, cards.cards);
+    }
+    if (specialties.ok) {
+      const select = elements.specialtySelect;
+      select.innerHTML = '<option value="">-- اختر تخصصاً --</option>';
+      specialties.specialties.forEach(s => {
+        const opt = document.createElement('option'); opt.value = s.name; opt.textContent = s.name;
+        if (s.owned) { opt.disabled = true; opt.style.color = '#9e9e9e'; }
+        select.appendChild(opt);
+      });
+      elements.createBtn.disabled = true;
+    }
+  } catch (error) { console.error('خطأ:', error); alert('فشل تحميل البيانات'); }
+}
+
+function handleUserStatus(status, editLink, cards) {
+  let btnText = 'يرجى الضغط لملاء معلوماتك العامة', btnAction = () => { window.open(`https://docs.google.com/forms/d/e/1FAIpQLSdO7-v3Oea4iV_YpC45MhH0_WfGstE7T5G-u_XhDqQ63g78-A/viewform?entry.982804977=${encodeURIComponent(currentUserEmail)}`, '_blank'); };
+  let enableSection = false, renderList = true;
+
+  if (status === 'طلب حذفها') {
+    btnText = 'سيتم اخفاء جميع بطاقاتك باقرب وقت ، و حذفها نهائي بعد 3 ايام .'; btnAction = null; renderList = false;
+  } else if (status === 'كاملة') {
+    btnText = 'تعديل معلوماتك العامة'; btnAction = () => window.open(editLink, '_blank'); enableSection = true;
+  } else if (status === 'ناقصة') {
+    btnText = 'يرجى استكمال معلوماتك العامة'; btnAction = () => window.open(editLink, '_blank'); enableSection = true;
+  } else if (status === 'مغلوطة') {
+    btnText = 'يرجى تدقيق صحة معلوماتك'; btnAction = () => window.open(editLink, '_blank'); enableSection = true;
+  } else if (status === 'متناقضة') {
+    btnText = 'يرجى التاكد من صحة معلوماتك'; btnAction = () => window.open(editLink, '_blank');
+  } else if (status === 'مخالفة') {
+    btnText = 'مخالفة سياسات المنصة'; btnAction = null;
+  } else if (!status) {
+    btnText = 'عذراً ،سوف يتم مراجعة معلوماتك باقرب وقت'; btnAction = null;
+  }
+
+  const dynBtnId = 'dynamicStatusBtn';
+  let dynBtn = document.getElementById(dynBtnId);
+  if (!dynBtn) {
+    dynBtn = document.createElement('button'); dynBtn.id = dynBtnId;
+    dynBtn.className = 'w-full btn-outline-red font-bold py-3 rounded-xl shadow-md mb-4 transition hover:bg-red-50';
+    elements.createSection.insertBefore(dynBtn, elements.createSection.firstChild);
+  }
+  dynBtn.textContent = btnText; dynBtn.disabled = !btnAction; dynBtn.onclick = btnAction;
+
+  elements.specialtySelect.style.display = enableSection ? 'block' : 'none';
+  elements.createBtn.style.display = enableSection ? 'block' : 'none';
+  const label = elements.createSection.querySelector('label[for="specialtySelect"]');
+  if (label) label.style.display = enableSection ? 'block' : 'none';
+  const desc = elements.createSection.querySelector('p');
+  if (desc) desc.style.display = enableSection ? 'block' : 'none';
+
+  if (renderList) { renderCards(cards); }
+  else {
+    elements.cardsList.innerHTML = '<p class="text-center text-red-600 font-bold p-4">تم تعليق وإخفاء جميع بطاقاتك بانتظار حذف الحساب.</p>';
+    elements.emptyState.classList.add('hidden');
+  }
+  appendDeleteButton();
+}
+
+function renderCards(cards) {
+  const list = elements.cardsList; list.innerHTML = '';
+  if (!cards || cards.length === 0) { elements.emptyState.classList.remove('hidden'); return; }
+  elements.emptyState.classList.add('hidden');
+  cards.forEach(card => {
+    const cardDiv = document.createElement('div'); cardDiv.className = 'card-box';
+    cardDiv.innerHTML = `
+      <div class="font-bold text-gray-800">${card.name}</div>
+      <div class="text-gray-600">التخصص: ${card.specialty}</div>
+      <div class="text-xs text-gray-400 font-bold mt-1">الحالة: ${card.status}</div>
+      <div class="flex gap-3 mt-3">
+        <button class="btn-outline-red px-4 py-1 rounded-lg text-sm font-bold transition hover:bg-red-50" onclick="window.open('${card.editLink}', '_blank')">تحديث</button>
+        <button class="bg-red-50 text-red-700 px-4 py-1 rounded-lg text-sm font-bold border border-red-200 transition hover:bg-red-100" onclick="deleteCard('${card.cardId}')">حذف</button>
+      </div>
+    `;
+    list.appendChild(cardDiv);
+  });
+}
+
+function appendDeleteButton() {
+  const delId = 'deleteAccountBtn';
+  if (document.getElementById(delId)) return;
+  const btn = document.createElement('button'); btn.id = delId;
+  btn.textContent = 'طلب حذف حساب فيتم'; btn.className = 'w-full py-3 bg-red-100 text-red-700 font-bold rounded-xl mt-6 hover:bg-red-200 transition';
+  btn.onclick = async () => {
+    if (!confirm('⚠️ تحذير OWASP الأمني: هل أنت متأكد تماماً من طلب حذف حسابك؟ سيتم إخفاء بطاقاتك وحذفه نهائياً بعد 3 أيام.')) return;
+    const pass = prompt('يرجى إعادة كتابة كلمة المرور لتأكيد الهوية وحماية حسابك:');
+    if (!pass) return;
+    try {
+      const cred = firebase.auth.EmailAuthProvider.credential(currentUserEmail, pass);
+      await auth.currentUser.reauthenticateWithCredential(cred);
+      const res = await callApi({ action: 'deleteAccount', email: currentUserEmail });
+      if (res.ok) {
+        alert('تم تقديم طلب حذف الحساب بنجاح. سيتم تسجيل خروجك الآن.');
+        await auth.signOut(); window.location.href = 'signup.html';
+      } else { alert('فشل تقديم الطلب: ' + res.error); }
+    } catch (e) { alert('فشل التحقق من كلمة المرور: ' + e.message); }
+  };
+  document.querySelector('main').appendChild(btn);
+}
 </script>
 
 </body>
