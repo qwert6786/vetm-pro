@@ -173,7 +173,10 @@ document.getElementById('signupForm').addEventListener('submit', async function(
   try {
     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
     const user = userCredential.user;
-    const actionCodeSettings = { url: 'https://befr-app.web.app/cards.html', handleCodeInApp: true };
+    const actionCodeSettings = { 
+  url: '{يرجى من المستخدم: وضع رابط صفحة login.html الفعلية الخاصة بك على GitHub Pages هنا}', 
+  handleCodeInApp: true 
+};
     await user.sendEmailVerification(actionCodeSettings);
     await auth.signOut();
     successEl.innerHTML = `🎉 تم إرسال رابط التفعيل بنجاح! <br>الرجاء فتح بريدك الإلكتروني: <br><strong class="underline">${email}</strong><br>والضغط على رابط التفعيل المرفق لتنشيط حسابك قبل تسجيل الدخول.`;
