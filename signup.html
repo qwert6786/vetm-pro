@@ -152,7 +152,7 @@
 </div>
 
 <script>
-const firebaseConfig = {
+    const firebaseConfig = {
   apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
   authDomain: "befr-app.firebaseapp.com",
   projectId: "befr-app",
@@ -160,148 +160,31 @@ const firebaseConfig = {
   messagingSenderId: "617082363952",
   appId: "1:617082363952:web:d7cc9365a02f3e23368df5"
 };
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const errorEl = document.getElementById('generalError'), successEl = document.getElementById('successMessage');
+  errorEl.style.display = 'none'; successEl.style.display = 'none';
+  if (password !== confirmPassword) {
+    document.getElementById('passwordMatchError').style.display = 'block'; return;
+  }
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    const actionCodeSettings = { url: 'https://befr-app.web.app/cards.html', handleCodeInApp: true };
+    await user.sendEmailVerification(actionCodeSettings);
+    await auth.signOut();
+    successEl.innerHTML = `🎉 تم إرسال رابط التفعيل بنجاح! <br>الرجاء فتح بريدك الإلكتروني: <br><strong class="underline">${email}</strong><br>والضغط على رابط التفعيل المرفق لتنشيط حسابك قبل تسجيل الدخول.`;
+    successEl.style.display = 'block'; signupForm.reset();
+  } catch (error) {
+    errorEl.style.display = 'block'; errorEl.textContent = '⚠️ حدث خطأ: ' + error.message;
+  }
+});
 
-    // 2. تهيئة Firebase
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-
-    // دالة إظهار/إخفاء كلمة السر
-    function togglePasswordVisibility(fieldId) {
-        const field = document.getElementById(fieldId);
-        const icon = field.parentElement.querySelector('.toggle-password');
-        if (field.type === 'password') {
-            field.type = 'text';
-            icon.textContent = '🙈';
-        } else {
-            field.type = 'password';
-            icon.textContent = '👁️';
-        }
-    }
-
-    // عناصر الصفحة
-    const signupForm = document.getElementById('signupForm');
-    const generalError = document.getElementById('generalError');
-    const successMessage = document.getElementById('successMessage');
-    const passwordMatchError = document.getElementById('passwordMatchError');
-    const googleBtn = document.getElementById('googleBtn');
-
-    // الحدث عند إرسال النموذج (طلب رابط التحقق)
-    signupForm.addEventListener('submit', async function(e) {
-        e.preventDefault(); // منع تحديث الصفحة الافتراضي
-
-        const fullName = document.getElementById('fullName').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        // إخفاء الرسائل السابقة
-        generalError.style.display = 'none';
-        successMessage.style.display = 'none';
-        passwordMatchError.style.display = 'none';
-
-        // التحقق من تطابق كلمتي السر
-        if (password !== confirmPassword) {
-            passwordMatchError.style.display = 'block';
-            return;
-        }
-
-        try {
-            // أ. إنشاء الحساب في Firebase Auth
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            const user = userCredential.user;
-
-            // ب. تحديث الاسم الثلاثي للمستخدم في ملفه الشخصي على Firebase
-            await user.updateProfile({
-                displayName: fullName
-            });
-
-            // ج. إرسال رابط تفعيل الحساب إلى البريد الإلكتروني فوراً
-            const actionCodeSettings = {
-                url: 'https://befr-app.web.app/cards.html', // نوجهه لصفحة البطاقات بعد ضغط الرابط
-                handleCodeInApp: true
-            };
-            await user.sendEmailVerification(actionCodeSettings);
-
-            // د. تسجيل الخروج الفوري لضمان عدم تصفحه للموقع ببريد غير مفعل
-            await auth.signOut();
-
-            // هـ. إظهار رسالة النجاح مع تنبيه الـ UX الخاص بالتحقق من الأخطاء الإملائية
-            successMessage.innerHTML = `
-                🎉 تم إرسال رابط التفعيل بنجاح! <br>
-                لقد أرسلنا الرابط إلى بريدك الإلكتروني: <br>
-                <strong class="underline text-[#2e7d32] text-base">${email}</strong> <br><br>
-                <div class="text-xs text-gray-700 bg-yellow-50 p-3 rounded-lg border-r-4 border-yellow-500 mt-2 text-right">
-                    ⚠️ <strong>هل تنتظر ولم يصلك البريد بعد؟</strong> <br>
-                    تأكد من أن البريد المكتوب في الأعلى صحيح تماماً ومكتوب بدون أخطاء إملائية. إذا لاحظت أي خطأ، يرجى تعديله وإعادة الإرسال الآن.
-                </div>
-            `;
-            successMessage.style.display = 'block';
-
-            // مسح الحقول بالكامل بعد النجاح
-            signupForm.reset();
-
-        } catch (error) {
-            generalError.style.display = 'block';
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    generalError.textContent = '⚠️ هذا البريد الإلكتروني مسجل بالفعل لاستخدام حساب آخر.';
-                    break;
-                case 'auth/invalid-email':
-                    generalError.textContent = '⚠️ البريد الإلكتروني المدخل غير صالح.';
-                    break;
-                case 'auth/weak-password':
-                    generalError.textContent = '⚠️ كلمة السر ضعيفة جداً. يجب أن تتكون من 6 أحرف على الأقل.';
-                    break;
-                case 'auth/operation-not-allowed':
-                    generalError.textContent = '⚠️ خيار التسجيل بالبريد وكلمة السر غير مفعل حالياً.';
-                    break;
-                default:
-                    generalError.textContent = '⚠️ حدث خطأ أثناء التسجيل: ' + error.message;
-            }
-        }
-    });
-
-    // تسجيل الدخول أو إنشاء حساب عبر Google
-    googleBtn.addEventListener('click', async function() {
-        generalError.style.display = 'none';
-        successMessage.style.display = 'none';
-
-        const provider = new firebase.auth.GoogleAuthProvider();
-
-        try {
-            const result = await auth.signInWithPopup(provider);
-            const user = result.user;
-
-            // بما أن حسابات جوجل مفعلة تلقائياً، نحفظ بياناته فوراً في Google Sheets عن طريق الـ Apps Script
-            await fetch('رابط_APPS_SCRIPT_الخاص_بك', {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    uid: user.uid, 
-                    email: user.email, 
-                    fullName: user.displayName || "مستخدم Google" 
-                })
-            });
-
-            successMessage.textContent = `🎉 مرحباً بك يا ${user.displayName}! تم التسجيل بنجاح، جاري تحويلك...`;
-            successMessage.style.display = 'block';
-
-            setTimeout(() => {
-                window.location.href = 'cards.html';
-            }, 2000);
-
-        } catch (error) {
-            generalError.style.display = 'block';
-            if (error.code === 'auth/popup-closed-by-user') {
-                generalError.textContent = '⚠️ تم إغلاق نافذة تسجيل Google قبل إكمال العملية.';
-            } else {
-                generalError.textContent = '⚠️ فشل التسجيل عبر Google: ' + error.message;
-            }
-        }
-    });
 </script>
 
 </body>
