@@ -177,7 +177,6 @@
 
 <!-- n.212.15 جافا سكريبت (منطق منفصل عن العرض) -->
 <script>
-    // 1. إعدادات مشروع Firebase الخاص بك (befr)
 const firebaseConfig = {
   apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
   authDomain: "befr-app.firebaseapp.com",
@@ -186,149 +185,48 @@ const firebaseConfig = {
   messagingSenderId: "617082363952",
   appId: "1:617082363952:web:d7cc9365a02f3e23368df5"
 };
-
-    // 2. تهيئة Firebase
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const elements = {
+  form: document.getElementById('loginForm'), email: document.getElementById('email'), password: document.getElementById('password'),
+  loginBtn: document.getElementById('loginBtn'), loading: document.getElementById('loginLoading'),
+  generalError: document.getElementById('generalError'), generalSuccess: document.getElementById('generalSuccess'),
+  emailError: document.getElementById('emailError'), passwordError: document.getElementById('passwordError'), googleBtn: document.getElementById('googleBtn')
+};
+elements.form.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const email = elements.email.value.trim(), password = elements.password.value;
+  elements.generalError.style.display = 'none'; elements.generalSuccess.style.display = 'none';
+  elements.loginBtn.disabled = true; elements.loading.classList.remove('hidden');
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    if (!user.emailVerified) {
+      elements.generalError.textContent = '⚠️ حسابك غير مفعّل! يرجى الضغط على رابط التفعيل المرسل لبريدك الإلكتروني أولاً.';
+      elements.generalError.style.display = 'block'; await auth.signOut();
+    } else {
+      elements.generalSuccess.textContent = '✅ تم تسجيل الدخول بنجاح. جاري التوجيه...';
+      elements.generalSuccess.style.display = 'block'; setTimeout(() => { window.location.href = 'cards.html'; }, 1000);
     }
-    const auth = firebase.auth();
+  } catch (error) {
+    elements.generalError.textContent = '⚠️ فشل الدخول: ' + error.message;
+    elements.generalError.style.display = 'block';
+  } finally {
+    elements.loginBtn.disabled = false; elements.loading.classList.add('hidden');
+  }
+});
+elements.googleBtn.addEventListener('click', async function() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const result = await auth.signInWithPopup(provider);
+    elements.generalSuccess.textContent = `🎉 مرحباً بك يا ${result.user.displayName}! جاري توجيهك...`;
+    elements.generalSuccess.style.display = 'block'; setTimeout(() => { window.location.href = 'cards.html'; }, 1000);
+  } catch (error) {
+    elements.generalError.textContent = '⚠️ فشل تسجيل الدخول عبر Google: ' + error.message;
+    elements.generalError.style.display = 'block';
+  }
+});
 
-    // n.212.17 عناصر الصفحة
-    const elements = {
-        form: document.getElementById('loginForm'),
-        email: document.getElementById('email'),
-        password: document.getElementById('password'),
-        loginBtn: document.getElementById('loginBtn'),
-        loading: document.getElementById('loginLoading'),
-        generalError: document.getElementById('generalError'),
-        generalSuccess: document.getElementById('generalSuccess'),
-        emailError: document.getElementById('emailError'),
-        passwordError: document.getElementById('passwordError')
-    };
-
-    // n.212.19 دالة إظهار/إخفاء كلمة السر
-    window.togglePasswordVisibility = function(fieldId) {
-        const field = document.getElementById(fieldId);
-        const icon = field.parentElement.querySelector('.toggle-password');
-        if (field.type === 'password') {
-            field.type = 'text';
-            icon.textContent = '🙈';
-            icon.setAttribute('aria-label', 'إخفاء كلمة السر');
-        } else {
-            field.type = 'password';
-            icon.textContent = '👁️';
-            icon.setAttribute('aria-label', 'إظهار كلمة السر');
-        }
-    };
-
-    // n.212.20 دالة التحقق من صحة النموذج (UI)
-    function validateForm() {
-        let isValid = true;
-
-        // n.212.21 التحقق من البريد
-        const email = elements.email.value.trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email)) {
-            elements.emailError.style.display = 'block';
-            isValid = false;
-        } else {
-            elements.emailError.style.display = 'none';
-        }
-
-        // n.212.22 التحقق من كلمة السر
-        if (!elements.password.value.trim()) {
-            elements.passwordError.style.display = 'block';
-            isValid = false;
-        } else {
-            elements.passwordError.style.display = 'none';
-        }
-
-        return isValid;
-    }
-
-    // n.212.23 دالة تنظيف الرسائل السابقة
-    function clearMessages() {
-        elements.generalError.style.display = 'none';
-        elements.generalSuccess.style.display = 'none';
-        elements.emailError.style.display = 'none';
-        elements.passwordError.style.display = 'none';
-    }
-
-    // n.212.24 دالة تسجيل الدخول (المنطق الأساسي باستخدام Firebase Auth)
-    async function login(email, password) {
-        clearMessages();
-
-        // n.212.25 إظهار حالة التحميل
-        elements.loginBtn.disabled = true;
-        elements.loading.classList.remove('hidden');
-
-        try {
-            // تسجيل الدخول الفعلي عبر Firebase Auth
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            const user = userCredential.user;
-
-            // التحقق الأمني: إذا كان البريد غير مفعّل، نمنعه من الدخول ونطلب منه التفعيل
-            if (!user.emailVerified) {
-                elements.generalError.textContent = '⚠️ حسابك غير مفعّل! يرجى الضغط على رابط التفعيل المرسل إلى بريدك الإلكتروني أولاً لتفعيل حسابك.';
-                elements.generalError.style.display = 'block';
-                await auth.signOut(); // تسجيل خروجه أمنياً فوراً
-            } else {
-                // تفعيل ناجح وبريد موثق
-                elements.generalSuccess.textContent = '✅ تم تسجيل الدخول بنجاح. جاري التوجيه...';
-                elements.generalSuccess.style.display = 'block';
-                setTimeout(() => {
-                    window.location.href = 'cards.html';
-                }, 500);
-            }
-        } catch (error) {
-            let errorMsg = 'فشل تسجيل الدخول: ';
-            switch (error.code) {
-                case 'auth/user-not-found':
-                case 'auth/wrong-password':
-                case 'auth/invalid-credential':
-                    errorMsg += 'البريد الإلكتروني أو كلمة السر غير صحيحة. يرجى المحاولة مرة أخرى.';
-                    break;
-                case 'auth/too-many-requests':
-                    errorMsg += 'لقد تم حظر المحاولات مؤقتاً لسلامتك. يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.';
-                    break;
-                default:
-                    errorMsg += error.message;
-            }
-            elements.generalError.textContent = '⚠️ ' + errorMsg;
-            elements.generalError.style.display = 'block';
-        } finally {
-            // n.212.29 إخفاء حالة التحميل
-            elements.loginBtn.disabled = false;
-            elements.loading.classList.add('hidden');
-        }
-    }
-
-    // n.212.30 حدث إرسال النموذج
-    elements.form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (!validateForm()) return;
-        const email = elements.email.value.trim();
-        const password = elements.password.value;
-        login(email, password);
-    });
-
-    // n.212.31 تحسين UX: الضغط على Enter في حقل كلمة السر
-    elements.password.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            elements.form.dispatchEvent(new Event('submit'));
-        }
-    });
-
-    // n.212.32 تحسين UX: مسح رسائل الخطأ عند الكتابة
-    elements.email.addEventListener('input', function() {
-        elements.emailError.style.display = 'none';
-        elements.generalError.style.display = 'none';
-    });
-    elements.password.addEventListener('input', function() {
-        elements.passwordError.style.display = 'none';
-        elements.generalError.style.display = 'none';
-    });
 </script>
 
 </body>
