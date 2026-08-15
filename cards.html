@@ -136,19 +136,18 @@ async function loadCardsData() {
     if (cards.ok) {
       elements.greeting.textContent = cards.fullName ? 'مرحباً بالسيد | ' + cards.fullName : 'مرحباً بالمهني';
       handleUserStatus(cards.infoStatus, cards.infoEditLink, cards.cards);
-    }
-    if (specialties.ok) {
-      const select = elements.specialtySelect;
-      select.innerHTML = '<option value="">-- اختر تخصصاً --</option>';
-      specialties.specialties.forEach(s => {
-        const opt = document.createElement('option'); opt.value = s.name; opt.textContent = s.name;
-        if (s.owned) { opt.disabled = true; opt.style.color = '#9e9e9e'; }
-        select.appendChild(opt);
-      });
-      elements.createBtn.disabled = true;
-    }
-  } catch (error) { console.error('خطأ:', error); alert('فشل تحميل البيانات'); }
-}
+  elements.specialtySelect.style.display = enableSection ? 'block' : 'none';
+  elements.createBtn.style.display = enableSection ? 'block' : 'none';
+  const label = elements.createSection.querySelector('label[for="specialtySelect"]');
+  if (label) label.style.display = enableSection ? 'block' : 'none';
+  const desc = elements.createSection.querySelector('p');
+  if (desc) desc.style.display = enableSection ? 'block' : 'none';
+
+  if (renderList) { renderCardsList(cards); } 
+  else {
+    elements.cardsList.innerHTML = '<p class="text-center text-red-600 font-bold p-4">تم تعليق وإخفاء جميع بطاقاتك بانتظار حذف الحساب.</p>';
+    elements.emptyState.classList.add('hidden');
+  }
 
 function handleUserStatus(status, editLink, cards) {
   let btnText = 'يرجى الضغط لملاء معلوماتك العامة', btnAction = () => { window.open(`https://docs.google.com/forms/d/e/1FAIpQLSdO7-v3Oea4iV_YpC45MhH0_WfGstE7T5G-u_XhDqQ63g78-A/viewform?entry.982804977=${encodeURIComponent(currentUserEmail)}`, '_blank'); };
