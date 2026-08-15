@@ -85,210 +85,123 @@
 </main>
 
 <script>
-// تأكد من وضع إعدادات Firebase الخاصة بك هنا
 const firebaseConfig = {
   apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
-  authDomain: "BEFR-app.firebaseapp.com",
-  projectId: "BEFR-app",
-  storageBucket: "BEFR-app.firebasestorage.app",
+  authDomain: "befr-app.firebaseapp.com",
+  projectId: "befr-app",
+  storageBucket: "befr-app.firebasestorage.app",
   messagingSenderId: "617082363952",
   appId: "1:617082363952:web:d7cc9365a02f3e23368df5"
 };
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const API_URL = 'https://script.google.com/macros/s/AKfycbwZ1N6iNf2s9whYw27HX49IX4c0AGKGq843t-zIswliEiuDVyEzK0BGLTtRhunZGv_w/exec';
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+const elements = {
+  greeting: document.getElementById('greetingMessage'), specialtySelect: document.getElementById('specialtySelect'),
+  createBtn: document.getElementById('createBtn'), duplicateWarning: document.getElementById('duplicateWarning'),
+  createLoading: document.getElementById('createLoading'), maxLimitMsg: document.getElementById('maxLimitMessage'),
+  cardsList: document.getElementById('cardsList'), emptyState: document.getElementById('emptyState'),
+  createSection: document.getElementById('createSection'), logoutBtn: document.getElementById('logoutBtn')
+};
+let currentUserEmail = '';
+
+async function callApi(payload) {
+  const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+  return r.json();
+}
+
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    if (!user.emailVerified) { auth.signOut().then(() => { window.location.href = 'login.html'; }); }
+    else { currentUserEmail = user.email; loadCardsData(); }
+  } else { window.location.href = 'login.html'; }
+});
+
+elements.logoutBtn.addEventListener('click', async () => { await auth.signOut(); window.location.href = 'login.html'; });
+
+async function loadCardsData() {
+  try {
+    const specialtiesReq = callApi({ action: 'getAvailableSpecialties', email: currentUserEmail });
+    const cardsReq = callApi({ action: 'getCards', email: currentUserEmail });
+    const [specialties, cards] = await Promise.all([specialtiesReq, cardsReq]);
+
+    if (cards.ok) {
+      elements.greeting.textContent = cards.fullName ? 'مرحباً بالسيد | ' + cards.fullName : 'مرحباً بالمهني';
+      handleUserStatus(cards.infoStatus, cards.infoEditLink, cards.cards);
     }
-    const auth = firebase.auth();
-
-    // يجب استبدال هذا الرابط برابط النشر الصحيح من جوجل
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzxAVdDLg7lMMKg42-ZCW_6aDEqlH-3RPASuo9R2UMQirc3r-mnfXRpkGOYMIqPrxxh/exec';
-
-    // دالة الاتصال المحدثة لالتقاط خطأ الـ HTML قبل انهيار السكريبت
-    async function callApi(payload) {
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            });
-            const textData = await response.text();
-            
-            try {
-                return JSON.parse(textData);
-            } catch (err) {
-                console.error("استجابة السيرفر غير متوقعة:", textData);
-                throw new Error("خطأ في الاتصال بالخادم. تأكد من إعدادات نشر Google Apps Script.");
-            }
-        } catch (error) {
-            throw error;
-        }
+    if (specialties.ok) {
+      const select = elements.specialtySelect;
+      select.innerHTML = '<option value="">-- اختر تخصصاً --</option>';
+      specialties.specialties.forEach(s => {
+        const opt = document.createElement('option'); opt.value = s.name; opt.textContent = s.name;
+        if (s.owned) { opt.disabled = true; opt.style.color = '#9e9e9e'; }
+        select.appendChild(opt);
+      });
+      elements.createBtn.disabled = true;
     }
+  } catch (error) { console.error('خطأ:', error); alert('فشل تحميل البيانات'); }
+}
 
-    const elements = {
-        greeting: document.getElementById('greetingMessage'),
-        specialtySelect: document.getElementById('specialtySelect'),
-        createBtn: document.getElementById('createBtn'),
-        duplicateWarning: document.getElementById('duplicateWarning'),
-        createLoading: document.getElementById('createLoading'),
-        maxLimitMsg: document.getElementById('maxLimitMessage'),
-        cardsList: document.getElementById('cardsList'),
-        emptyState: document.getElementById('emptyState'),
-        createSection: document.getElementById('createSection'),
-        logoutBtn: document.getElementById('logoutBtn')
-    };
+function handleUserStatus(status, editLink, cards) {
+  let btnText = 'يرجى الضغط لملاء معلوماتك العامة', btnAction = () => { window.open(`https://docs.google.com/forms/d/e/1FAIpQLSdO7-v3Oea4iV_YpC45MhH0_WfGstE7T5G-u_XhDqQ63g78-A/viewform?entry.982804977=${encodeURIComponent(currentUserEmail)}`, '_blank'); };
+  let enableSection = false, renderList = true;
 
-    let currentUserEmail = '';
+  if (status === 'طلب حذفها') {
+    btnText = 'سيتم اخفاء جميع بطاقاتك باقرب وقت ، و حذفها نهائي بعد 3 ايام .'; btnAction = null; renderList = false;
+  } else if (status === 'كاملة') {
+    btnText = 'تعديل معلوماتك العامة'; btnAction = () => window.open(editLink, '_blank'); enableSection = true;
+  } else if (status === 'ناقصة') {
+    btnText = 'يرجى استكمال معلوماتك العامة'; btnAction = () => window.open(editLink, '_blank'); enableSection = true;
+  } else if (status === 'مغلوطة') {
+    btnText = 'يرجى تدقيق صحة معلوماتك'; btnAction = () => window.open(editLink, '_blank'); enableSection = true;
+  } else if (status === 'متناقضة') {
+    btnText = 'يرجى التاكد من صحة معلوماتك'; btnAction = () => window.open(editLink, '_blank');
+  } else if (status === 'مخالفة') {
+    btnText = 'مخالفة سياسات المنصة'; btnAction = null;
+  } else if (!status) {
+    btnText = 'عذراً ،سوف يتم مراجعة معلوماتك باقرب وقت'; btnAction = null;
+  }
 
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            if (!user.emailVerified) {
-                auth.signOut().then(() => {
-                    window.location.href = 'login.html';
-                });
-            } else {
-                currentUserEmail = user.email;
-                elements.greeting.textContent = 'مرحباً بالسيد (جاري التحميل...)';
-                loadCardsData();
-            }
-        } else {
-            window.location.href = 'login.html';
-        }
-    });
+  const dynBtnId = 'dynamicStatusBtn';
+  let dynBtn = document.getElementById(dynBtnId);
+  if (!dynBtn) {
+    dynBtn = document.createElement('button'); dynBtn.id = dynBtnId;
+    dynBtn.className = 'w-full btn-outline-red font-bold py-3 rounded-xl shadow-md mb-4 transition hover:bg-red-50';
+    elements.createSection.insertBefore(dynBtn, elements.createSection.firstChild);
+  }
+  dynBtn.textContent = btnText;
+  dynBtn.disabled = !btnAction;
+  dynBtn.onclick = btnAction;
 
-    elements.logoutBtn.addEventListener('click', async function() {
-        try {
-            await auth.signOut();
-            window.location.href = 'login.html';
-        } catch (error) {
-            alert('حدث خطأ أثناء تسجيل الخروج: ' + error.message);
-        }
-    });
+  elements.createSection.style.display = enableSection ? 'block' : 'none';
+  if (renderList) {
+    renderCardsList(cards);
+  } else {
+    elements.cardsList.innerHTML = '<p class="text-center text-red-600 font-bold p-4">تم تعليق وإخفاء جميع بطاقاتك بانتظار حذف الحساب.</p>';
+    elements.emptyState.classList.add('hidden');
+  }
+}
 
-    function renderCards(cards) {
-        const list = elements.cardsList;
-        list.innerHTML = '';
+function renderCardsList(cards) {
+  const list = elements.cardsList; list.innerHTML = '';
+  if (!cards || cards.length === 0) { elements.emptyState.classList.remove('hidden'); return; }
+  elements.emptyState.classList.add('hidden');
+  cards.forEach(card => {
+    const cardDiv = document.createElement('div'); cardDiv.className = 'card-box';
+    cardDiv.innerHTML = `
+      <div class="font-bold text-gray-800">${card.name}</div>
+      <div class="text-gray-600">التخصص: ${card.specialty}</div>
+      <div class="text-xs text-gray-400 font-bold mt-1">الحالة: ${card.status}</div>
+      <div class="flex gap-3 mt-3">
+        <button class="btn-outline-red px-4 py-1 rounded-lg text-sm font-bold transition hover:bg-red-50" onclick="window.open('${card.editLink}', '_blank')">تحديث</button>
+        <button class="bg-red-50 text-red-700 px-4 py-1 rounded-lg text-sm font-bold border border-red-200 transition hover:bg-red-100" onclick="deleteCard('${card.cardId}')">حذف</button>
+      </div>
+    `;
+    list.appendChild(cardDiv);
+  });
+}
 
-        if (!cards || cards.length === 0) {
-            elements.emptyState.classList.remove('hidden');
-            return;
-        }
-        elements.emptyState.classList.add('hidden');
-
-        cards.forEach(card => {
-            const cardDiv = document.createElement('div');
-            cardDiv.className = 'card-box';
-            cardDiv.innerHTML = `
-                <div class="font-bold text-gray-800">${card.name}</div>
-                <div class="text-gray-600">التخصص: ${card.specialty}</div>
-                <div class="text-xs text-gray-400 font-bold mt-1">الحالة: ${card.status}</div>
-                <div class="flex gap-3 mt-3">
-                    <button class="btn-outline-red px-4 py-1 rounded-lg text-sm font-bold transition hover:bg-red-50" onclick="window.open('${card.editLink}', '_blank')">تحديث</button>
-                    <button class="bg-red-50 text-red-700 px-4 py-1 rounded-lg text-sm font-bold border border-red-200 transition hover:bg-red-100" onclick="deleteCard('${card.cardId}')">حذف</button>
-                </div>
-            `;
-            list.appendChild(cardDiv);
-        });
-    }
-
-    async function loadCardsData() {
-        try {
-            const specialtiesReq = callApi({ action: 'getAvailableSpecialties', email: currentUserEmail });
-            const cardsReq = callApi({ action: 'getCards', email: currentUserEmail });
-            
-            const [specialties, cards] = await Promise.all([specialtiesReq, cardsReq]);
-
-            // تحديث رسالة الترحيب بناءً على الاسم المجلوب من الشيت
-            if (cards.ok && cards.fullName) {
-                elements.greeting.textContent = 'مرحباً بالسيد | ' + cards.fullName;
-            } else {
-                elements.greeting.textContent = 'مرحباً بالمهني';
-            }
-
-            if (specialties.ok) {
-                const select = elements.specialtySelect;
-                select.innerHTML = '<option value="">-- اختر تخصصاً --</option>';
-                specialties.specialties.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.name;
-                    opt.textContent = s.name;
-                    if (s.owned) {
-                        opt.disabled = true;
-                        opt.style.color = '#9e9e9e';
-                    }
-                    select.appendChild(opt);
-                });
-                elements.createBtn.disabled = true;
-            }
-
-            if (cards.ok) {
-                renderCards(cards.cards);
-                const count = cards.cards.length;
-                if (count >= 6) {
-                    elements.createSection.style.display = 'none';
-                    elements.maxLimitMsg.style.display = 'block';
-                } else {
-                    elements.createSection.style.display = 'block';
-                    elements.maxLimitMsg.style.display = 'none';
-                }
-                elements.createBtn.disabled = false;
-            } else {
-                renderCards([]);
-            }
-        } catch (error) {
-            console.error('فشل تحميل البيانات:', error);
-            renderCards([]);
-            alert(error.message);
-        }
-    }
-
-    window.deleteCard = async function(cardId) {
-        if (!confirm('هل أنت متأكد من تقديم طلب بحذف هذه البطاقة؟')) return;
-
-        try {
-            const result = await callApi({ action: 'deleteCard', email: currentUserEmail, cardId });
-            if (result.ok) {
-                alert('تم تحديث حالة البطاقة إلى "طلب حذفها".');
-                loadCardsData();
-            } else {
-                alert('فشل الحذف: ' + result.error);
-            }
-        } catch (error) {
-            alert('حدث خطأ أثناء الحذف: ' + error.message);
-        }
-    };
-
-    elements.createBtn.addEventListener('click', async function() {
-        const specialty = elements.specialtySelect.value;
-        if (!specialty) {
-            alert('يرجى اختيار تخصص.');
-            return;
-        }
-
-        elements.createBtn.disabled = true;
-        elements.createLoading.classList.remove('hidden');
-
-        try {
-            const result = await callApi({ action: 'getPrefilledFormLink', email: currentUserEmail, specialty });
-            if (result.ok) {
-                window.open(result.link, '_blank');
-                elements.duplicateWarning.classList.add('hidden');
-                
-                // إعادة تنشيط زر التحديث ليعكس البطاقة الجديدة بعد فترة قصيرة
-                setTimeout(loadCardsData, 3000);
-            } else {
-                alert('فشل إنشاء الرابط: ' + result.error);
-            }
-        } catch (error) {
-            alert('حدث خطأ: ' + error.message);
-        } finally {
-            elements.createBtn.disabled = false;
-            elements.createLoading.classList.add('hidden');
-        }
-    });
-
-    elements.specialtySelect.addEventListener('change', function() {
-        elements.createBtn.disabled = !elements.specialtySelect.value;
-    });
 </script>
 
 </body>
