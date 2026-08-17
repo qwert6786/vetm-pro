@@ -66,13 +66,14 @@
         <!-- قسم إنشاء بطاقة جديدة + الزر التفاعلي المضاف في الأعلى -->
         <div id="createSection" class="bg-white p-5 rounded-2xl shadow-sm">
             
-            <!-- [إضافة جديدة] الزر التفاعلي (iframe Hack) للمعلومات العامة -->
-            <div id="generalInfoWrapper" class="mb-5 pb-4 border-b border-gray-100">
-                <label class="block text-sm font-bold text-gray-700 mb-2">الملف الشخصي والمعلومات العامة</label>
+            <!-- القسم المحدث: حالة المعلومات العامة والزر -->
+            <div id="generalInfoWrapper" class="mb-6 pb-5 border-b border-gray-200 text-center">
+                <h3 class="text-sm font-bold text-gray-500 mb-2">حالة المعلومات العامة وحسابك :</h3>
+                <p id="generalInfoStatusText" class="text-lg font-black text-brand-red mb-4 min-h-[28px]">جاري فحص حالة الحساب...</p>
+                
                 <button id="generalInfoBtn" class="w-full btn-red font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
-                    <span id="generalInfoBtnText">جاري فحص البيانات العامة...</span>
+                    <span id="generalInfoBtnText">جاري التحميل...</span>
                 </button>
-                <p id="generalInfoStatusHint" class="text-xs text-gray-500 mt-2 text-center hidden"></p>
             </div>
 
             <!-- محتوى إنشاء البطاقات التخصصية -->
@@ -150,7 +151,7 @@ const firebaseConfig = {
     }
     const auth = firebase.auth();
 
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwpFhZWQKQL9A9sTvufMYAH_UCgs9rije6z9YXcAX6ZRNhkcgsAv6M8Z6mWGiXKd3AR/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyBYO-sR251W74KAm15vlNCGLl3Ox7xAeQfd0WKLJ-psjeE0pZ-uY2A4xQwdoG-gvf2/exec';
     
     // رابط نموذج كوكل للمعلومات العامة (يتم تعبئة ID السؤال لاحقاً)
     const GENERAL_INFO_FORM_URL = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform';
@@ -275,45 +276,47 @@ const firebaseConfig = {
     // الإضافة الوحيدة محلياً هي "تجميد" الزر بعد الضغط عليه (تجربة استخدام فقط، لا تُكتب أي بيانات
     // على الشيت) لحين تغيّر النص القادم من الخادم فعلياً، أي لحين تغيّر حالة العمود O.
     function applyGeneralInfoStatusLogic(cardsResponse) {
-        const serverBtnText = cardsResponse.btnText || 'يرجى الضغط لملاء معلوماتك العامة';
+        const serverBtnText = cardsResponse.btnText || 'يرجى الضغط لملاء معلوماتك';
+        const serverStatusText = cardsResponse.statusText || 'جاري التحميل...';
         const serverBtnUrl = cardsResponse.btnUrl || '';
         const serverCanClick = !!cardsResponse.canClick;
         const serverEnableSection = !!cardsResponse.enableSection;
-        const infoStatus = cardsResponse.infoStatus || '';
-
-        elements.generalInfoStatusHint.classList.add('hidden');
-        elements.generalInfoStatusHint.textContent = '';
 
         const freezeKey = getGeneralInfoFreezeKey(currentUserEmail);
         let frozenSnapshot = null;
         try { frozenSnapshot = localStorage.getItem(freezeKey); } catch (e) { frozenSnapshot = null; }
 
-        if (frozenSnapshot !== null && frozenSnapshot === serverBtnText) {
-            // نفس نص الزر الذي جُمّد عنده سابقاً؛ أي أن حالة العمود O لم تتغيّر بعد من قبل الإدارة
+        const frozenExpectedStatus = 'نشكرك ، معلوماتك ستدقق قريباً';
+
+        // التحقق مما إذا كان الزر مجمداً مسبقاً
+        if (frozenSnapshot !== null && frozenSnapshot === serverStatusText) {
+            // الحالة في الشيت لم تتغير بعد، نستمر في عرض حالة التجميد
             currentGeneralInfoUrl = '';
-            currentGeneralInfoBtnText = serverBtnText;
-            elements.generalInfoBtnText.textContent = 'نشكرك ، معلوماتك ستدقق قريباً ، يمكنك المتابعة';
+            currentGeneralInfoBtnText = 'الطلب قيد المراجعة';
+            elements.generalInfoBtnText.textContent = 'الطلب قيد المراجعة';
+            document.getElementById('generalInfoStatusText').textContent = frozenExpectedStatus;
             elements.generalInfoBtn.disabled = true;
+            elements.generalInfoBtn.classList.replace('btn-red', 'bg-gray-400'); // تغيير لون الزر ليوحي بالانتظار
         } else {
-            // إما أول تحميل للصفحة، أو تغيّرت الحالة فعلياً في الشيت ← إزالة التجميد وعرض الحالة الحقيقية
+            // إما تحميل جديد، أو الإدارة قامت بتحديث حالة العمود O
             if (frozenSnapshot !== null) {
                 try { localStorage.removeItem(freezeKey); } catch (e) { /* تجاهل */ }
             }
             currentGeneralInfoUrl = serverBtnUrl;
             currentGeneralInfoBtnText = serverBtnText;
+            
             elements.generalInfoBtnText.textContent = serverBtnText;
+            document.getElementById('generalInfoStatusText').textContent = serverStatusText;
+            
             elements.generalInfoBtn.disabled = !serverCanClick;
+            if(serverCanClick) {
+                elements.generalInfoBtn.classList.replace('bg-gray-400', 'btn-red');
+            } else {
+                elements.generalInfoBtn.classList.replace('btn-red', 'bg-gray-400');
+            }
         }
 
-        // تلميحات توضيحية إضافية أسفل الزر (لا تُغيّر نص الزر نفسه، فقط سطر تنبيه مساعد)
-        if (infoStatus === 'متناقضة') {
-            elements.generalInfoStatusHint.textContent = '⚠️ الحساب معلق مؤقتاً لحين تدقيق التناقض في البيانات.';
-            elements.generalInfoStatusHint.classList.remove('hidden');
-        } else if (infoStatus === 'مخالفة') {
-            elements.generalInfoStatusHint.textContent = '⛔ الحساب محظور بسبب خرق تعليمات منصة PEFR.';
-            elements.generalInfoStatusHint.classList.remove('hidden');
-        }
-
+        // تفعيل أو تعطيل قسم إضافة البطاقات بناءً على قرار الخادم
         setCardFeaturesState(serverEnableSection);
     }
 
@@ -369,16 +372,24 @@ const firebaseConfig = {
         }
     }
 
-    // فتح نافذة الـ iframe لتعبئة النموذج + تجميد الزر فوراً لحين تغيّر الحالة في العمود O
+    // فتح نافذة الـ iframe وتجميد الزر وتغيير النص كما طلبت
     elements.generalInfoBtn.addEventListener('click', function() {
         if (elements.generalInfoBtn.disabled || !currentGeneralInfoUrl) return;
 
+        // حالة التجميد الجديدة حسب مخططك
+        const frozenStatusMsg = 'نشكرك ، معلوماتك ستدقق قريباً';
+        
         try {
-            localStorage.setItem(getGeneralInfoFreezeKey(currentUserEmail), currentGeneralInfoBtnText);
-        } catch (e) { /* تجاهل: التجميد ميزة مساعدة فقط ولا يجب أن توقف سير العمل */ }
+            // نحفظ حالة الشيت الحالية، لكي نفك التجميد عندما تتغير الحالة من الإدارة
+            const currentStatus = document.getElementById('generalInfoStatusText').textContent;
+            localStorage.setItem(getGeneralInfoFreezeKey(currentUserEmail), currentStatus);
+        } catch (e) {}
 
-        elements.generalInfoBtnText.textContent = 'نشكرك ، معلوماتك ستدقق قريباً ، يمكنك المتابعة';
+        // تحديث الواجهة فوراً بعد الضغط
+        document.getElementById('generalInfoStatusText').textContent = frozenStatusMsg;
+        elements.generalInfoBtnText.textContent = 'الطلب قيد المراجعة';
         elements.generalInfoBtn.disabled = true;
+        elements.generalInfoBtn.classList.replace('btn-red', 'bg-gray-400');
 
         openIframeModal('استمارة المعلومات العامة والملف الشخصي', currentGeneralInfoUrl);
     });
