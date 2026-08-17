@@ -66,12 +66,11 @@
         <!-- قسم إنشاء بطاقة جديدة + الزر التفاعلي المضاف في الأعلى -->
         <div id="createSection" class="bg-white p-5 rounded-2xl shadow-sm">
             
-            <!-- القسم المحدث: حالة المعلومات العامة والزر -->
-            <div id="generalInfoWrapper" class="mb-6 pb-5 border-b border-gray-200 text-center">
-                <h3 class="text-sm font-bold text-gray-500 mb-2">حالة المعلومات العامة وحسابك :</h3>
-                <p id="generalInfoStatusText" class="text-lg font-black text-brand-red mb-4 min-h-[28px]">جاري فحص حالة الحساب...</p>
-                
-                <button id="generalInfoBtn" class="w-full btn-red font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+            <!-- [إضافة جديدة] الزر التفاعلي (iframe Hack) للمعلومات العامة -->
+            <div id="generalInfoWrapper" class="mb-5 pb-4 border-b border-gray-100">
+                <h3 class="text-sm font-bold text-gray-700 mb-1 text-center">الملف الشخصي والمعلومات العامة</h3>
+                <p id="generalInfoStatusText" class="text-sm text-gray-600 mb-3 text-center leading-relaxed">جاري التحقق من حالة حسابك...</p>
+                <button id="generalInfoBtn" class="w-full btn-red font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2" disabled>
                     <span id="generalInfoBtnText">جاري التحميل...</span>
                 </button>
             </div>
@@ -138,7 +137,7 @@
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
+  a  apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
   authDomain: "befr-app.firebaseapp.com",
   projectId: "befr-app",
   storageBucket: "befr-app.firebasestorage.app",
@@ -151,7 +150,7 @@ const firebaseConfig = {
     }
     const auth = firebase.auth();
 
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyBYO-sR251W74KAm15vlNCGLl3Ox7xAeQfd0WKLJ-psjeE0pZ-uY2A4xQwdoG-gvf2/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwqQSFbtzt5r-SBdlHj0oHtqrcBuVQQHrA0C9StKYTU4HM_Wgw1gofaahbdAyvkA1N1/exec';
     
     // رابط نموذج كوكل للمعلومات العامة (يتم تعبئة ID السؤال لاحقاً)
     const GENERAL_INFO_FORM_URL = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform';
@@ -190,7 +189,7 @@ const firebaseConfig = {
         // العناصر الجديدة
         generalInfoBtn: document.getElementById('generalInfoBtn'),
         generalInfoBtnText: document.getElementById('generalInfoBtnText'),
-        generalInfoStatusHint: document.getElementById('generalInfoStatusHint'),
+        generalInfoStatusText: document.getElementById('generalInfoStatusText'),
         cardCreationControls: document.getElementById('cardCreationControls'),
         cardsListSection: document.getElementById('cardsListSection'),
         deleteAccountBtn: document.getElementById('deleteAccountBtn'),
@@ -202,7 +201,7 @@ const firebaseConfig = {
 
     let currentUserEmail = '';
     let currentGeneralInfoUrl = '';
-    let currentGeneralInfoBtnText = '';
+    let currentGeneralInfoStateKey = '';
 
     auth.onAuthStateChanged((user) => {
         if (user) {
@@ -271,52 +270,53 @@ const firebaseConfig = {
         return 'PEFR_geninfo_frozen_' + email;
     }
 
-    // تطبيق حالة الزر التفاعلي الديناميكي: كل النص/الرابط/التفعيل قادم حصراً من Google Apps Script
+    // تطبيق حالة الزر والقسم التوضيحي: كل النص/الرابط/التفعيل قادم حصراً من Google Apps Script
     // (getCards) حسب فحصه للعمودين M و O، دون أي اشتقاق أو منطق أعمال مكرر هنا في cards.html.
-    // الإضافة الوحيدة محلياً هي "تجميد" الزر بعد الضغط عليه (تجربة استخدام فقط، لا تُكتب أي بيانات
-    // على الشيت) لحين تغيّر النص القادم من الخادم فعلياً، أي لحين تغيّر حالة العمود O.
+    // المقارنة المنطقية (التجميد) تعتمد على stateKey الثابت القادم من الخادم، وليس على أي نص
+    // معروض - كي لا تتأثر بتغييرات النصوص لاحقاً ولا تتشابه حالتان يتشابه نص زرّيهما.
     function applyGeneralInfoStatusLogic(cardsResponse) {
-        const serverBtnText = cardsResponse.btnText || 'يرجى الضغط لملاء معلوماتك';
-        const serverStatusText = cardsResponse.statusText || 'جاري التحميل...';
+        const stateKey = cardsResponse.stateKey || 'no_email';
+        const serverBtnText = cardsResponse.btnText || '';
+        const serverStatusText = cardsResponse.statusText || '';
         const serverBtnUrl = cardsResponse.btnUrl || '';
         const serverCanClick = !!cardsResponse.canClick;
         const serverEnableSection = !!cardsResponse.enableSection;
+        const serverShowBtn = cardsResponse.showBtn !== false;
+
+        // حالة المعلومات العامة وحسابك: تُعرض دائماً كما وردت من الخادم، لا تتأثر بالتجميد إطلاقاً
+        elements.generalInfoStatusText.textContent = serverStatusText;
 
         const freezeKey = getGeneralInfoFreezeKey(currentUserEmail);
         let frozenSnapshot = null;
         try { frozenSnapshot = localStorage.getItem(freezeKey); } catch (e) { frozenSnapshot = null; }
 
-        const frozenExpectedStatus = 'نشكرك ، معلوماتك ستدقق قريباً';
-
-        // التحقق مما إذا كان الزر مجمداً مسبقاً
-        if (frozenSnapshot !== null && frozenSnapshot === serverStatusText) {
-            // الحالة في الشيت لم تتغير بعد، نستمر في عرض حالة التجميد
+        if (frozenSnapshot !== null && frozenSnapshot === stateKey) {
+            // نفس الحالة التي جُمّد عندها الزر سابقاً؛ أي أن حالة العمود O لم تتغيّر بعد من قبل الإدارة
             currentGeneralInfoUrl = '';
-            currentGeneralInfoBtnText = 'الطلب قيد المراجعة';
-            elements.generalInfoBtnText.textContent = 'الطلب قيد المراجعة';
-            document.getElementById('generalInfoStatusText').textContent = frozenExpectedStatus;
+            currentGeneralInfoStateKey = stateKey;
+            elements.generalInfoBtn.classList.remove('hidden');
+            elements.generalInfoBtnText.textContent = 'نشكرك ، معلوماتك ستدقق قريباً';
             elements.generalInfoBtn.disabled = true;
-            elements.generalInfoBtn.classList.replace('btn-red', 'bg-gray-400'); // تغيير لون الزر ليوحي بالانتظار
+        } else if (!serverShowBtn) {
+            // لا يوجد أي إجراء ممكن في هذه الحالة (كتجميد الحساب تمهيداً للحذف) ← إخفاء الزر بالكامل
+            if (frozenSnapshot !== null) {
+                try { localStorage.removeItem(freezeKey); } catch (e) { /* تجاهل */ }
+            }
+            currentGeneralInfoUrl = '';
+            currentGeneralInfoStateKey = stateKey;
+            elements.generalInfoBtn.classList.add('hidden');
         } else {
-            // إما تحميل جديد، أو الإدارة قامت بتحديث حالة العمود O
+            // إما أول تحميل للصفحة، أو تغيّرت الحالة فعلياً في الشيت ← إزالة التجميد وعرض الحالة الحقيقية
             if (frozenSnapshot !== null) {
                 try { localStorage.removeItem(freezeKey); } catch (e) { /* تجاهل */ }
             }
             currentGeneralInfoUrl = serverBtnUrl;
-            currentGeneralInfoBtnText = serverBtnText;
-            
+            currentGeneralInfoStateKey = stateKey;
+            elements.generalInfoBtn.classList.remove('hidden');
             elements.generalInfoBtnText.textContent = serverBtnText;
-            document.getElementById('generalInfoStatusText').textContent = serverStatusText;
-            
             elements.generalInfoBtn.disabled = !serverCanClick;
-            if(serverCanClick) {
-                elements.generalInfoBtn.classList.replace('bg-gray-400', 'btn-red');
-            } else {
-                elements.generalInfoBtn.classList.replace('btn-red', 'bg-gray-400');
-            }
         }
 
-        // تفعيل أو تعطيل قسم إضافة البطاقات بناءً على قرار الخادم
         setCardFeaturesState(serverEnableSection);
     }
 
@@ -372,24 +372,16 @@ const firebaseConfig = {
         }
     }
 
-    // فتح نافذة الـ iframe وتجميد الزر وتغيير النص كما طلبت
+    // فتح نافذة الـ iframe لتعبئة النموذج + تجميد الزر فوراً لحين تغيّر الحالة في العمود O
     elements.generalInfoBtn.addEventListener('click', function() {
         if (elements.generalInfoBtn.disabled || !currentGeneralInfoUrl) return;
 
-        // حالة التجميد الجديدة حسب مخططك
-        const frozenStatusMsg = 'نشكرك ، معلوماتك ستدقق قريباً';
-        
         try {
-            // نحفظ حالة الشيت الحالية، لكي نفك التجميد عندما تتغير الحالة من الإدارة
-            const currentStatus = document.getElementById('generalInfoStatusText').textContent;
-            localStorage.setItem(getGeneralInfoFreezeKey(currentUserEmail), currentStatus);
-        } catch (e) {}
+            localStorage.setItem(getGeneralInfoFreezeKey(currentUserEmail), currentGeneralInfoStateKey);
+        } catch (e) { /* تجاهل: التجميد ميزة مساعدة فقط ولا يجب أن توقف سير العمل */ }
 
-        // تحديث الواجهة فوراً بعد الضغط
-        document.getElementById('generalInfoStatusText').textContent = frozenStatusMsg;
-        elements.generalInfoBtnText.textContent = 'الطلب قيد المراجعة';
+        elements.generalInfoBtnText.textContent = 'نشكرك ، معلوماتك ستدقق قريباً';
         elements.generalInfoBtn.disabled = true;
-        elements.generalInfoBtn.classList.replace('btn-red', 'bg-gray-400');
 
         openIframeModal('استمارة المعلومات العامة والملف الشخصي', currentGeneralInfoUrl);
     });
