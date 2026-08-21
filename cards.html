@@ -120,21 +120,6 @@
 </main>
 
 <!-- [إضافة جديدة] نافذة العرض المضمنة (iframe Hack Modal) -->
-<div id="iframeModal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex items-center justify-center p-3">
-    <div class="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh]">
-        <div class="bg-brand-red text-white px-4 py-3 flex justify-between items-center">
-            <h3 id="modalTitle" class="font-bold text-sm">تعبئة البيانات</h3>
-            <button onclick="closeIframeModal()" class="text-white font-bold text-xl leading-none">&times;</button>
-        </div>
-        <div class="p-2 flex-grow relative bg-gray-50">
-            <div id="iframeLoader" class="absolute inset-0 flex items-center justify-center bg-white z-10">
-                <div class="loading-spinner"></div>
-            </div>
-            <iframe id="googleFormIframe" src="" class="w-full h-full border-0 rounded-b-xl"></iframe>
-        </div>
-    </div>
-</div>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyBYxorDeKkf0TB_yyFvCjEmW2yCnuiQEvc",
@@ -150,7 +135,7 @@ const firebaseConfig = {
     }
     const auth = firebase.auth();
 
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwyt_9qp6_FBFUluhHG5mXAjpRPWV03xgk3DMIUTCihy34ZwgGDIg_17B33O3tNgjAX/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxMBIZjVNVdjlDQHamFi7U6yFYdoOvHanY5OVIPsXzya336hQgek5dl3RXSeTinUqlX/exec';
     
     // رابط نموذج كوكل للمعلومات العامة (يتم تعبئة ID السؤال لاحقاً)
     const GENERAL_INFO_FORM_URL = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform';
@@ -193,10 +178,7 @@ const firebaseConfig = {
         cardCreationControls: document.getElementById('cardCreationControls'),
         cardsListSection: document.getElementById('cardsListSection'),
         deleteAccountBtn: document.getElementById('deleteAccountBtn'),
-        iframeModal: document.getElementById('iframeModal'),
-        googleFormIframe: document.getElementById('googleFormIframe'),
-        iframeLoader: document.getElementById('iframeLoader'),
-        modalTitle: document.getElementById('modalTitle')
+
     };
 
     let currentUserEmail = '';
@@ -383,7 +365,7 @@ const firebaseConfig = {
         elements.generalInfoBtnText.textContent = 'نشكرك ، معلوماتك ستدقق قريباً';
         elements.generalInfoBtn.disabled = true;
 
-        openIframeModal('استمارة المعلومات العامة والملف الشخصي', currentGeneralInfoUrl);
+        openFormWindow('استمارة المعلومات العامة والملف الشخصي', currentGeneralInfoUrl);
     });
 
     // طلب حذف حساب PEFR
@@ -402,21 +384,30 @@ const firebaseConfig = {
         }
     });
 
-    window.openIframeModal = function(title, url) {
-        elements.modalTitle.textContent = title;
-        elements.iframeLoader.classList.remove('hidden');
-        elements.googleFormIframe.src = url;
-        elements.iframeModal.classList.remove('hidden');
-
-        elements.googleFormIframe.onload = function() {
-            elements.iframeLoader.classList.add('hidden');
-        };
-    };
-
-    window.closeIframeModal = function() {
-        elements.iframeModal.classList.add('hidden');
-        elements.googleFormIframe.src = '';
-        loadCardsData(); // إعادة تحميل الواجهة لتشغيل التحديثات
+    // فتح النموذج في نافذة منفصلة بدل iframe (Google Forms تحظر iframe)
+    window.openFormWindow = function(title, url) {
+        if (!url) {
+            alert('عذراً، الرابط غير متاح حالياً');
+            return;
+        }
+        // فتح نافذة جديدة بحجم مناسب (900x700)
+        // اسم النافذة يتضمن timestamp لضمان فتح نافذة جديدة كل مرة
+        const formWindow = window.open(url, 'PEFR_form_' + Date.now(), 'width=900,height=700,scrollbars=yes,resizable=yes');
+        
+        // في حالة حجب النوافذ المنبثقة من المتصفح
+        if (!formWindow) {
+            alert('تعذّر فتح نافذة النموذج. يرجى السماح بالنوافذ المنبثقة من هذا الموقع والمحاولة مجدداً.');
+            return;
+        }
+        
+        // فحص دوري لمعرفة إذا أغلق المستخدم النافذة
+        const checkClosed = setInterval(() => {
+            if (formWindow.closed) {
+                clearInterval(checkClosed);
+                // النافذة أغُلقت — إعادة تحميل البيانات بحيث تظهر البطاقات/الحالات الجديدة
+                loadCardsData();
+            }
+        }, 1000);
     };
 
     window.deleteCard = async function(cardId) {
@@ -448,7 +439,7 @@ const firebaseConfig = {
         try {
             const result = await callApi({ action: 'getPrefilledFormLink', email: currentUserEmail, specialty });
             if (result.ok) {
-                openIframeModal('إنشاء بطاقة مهنية جديدة - ' + specialty, result.link);
+                openFormWindow('إنشاء بطاقة مهنية جديدة - ' + specialty, result.link);
                 elements.duplicateWarning.classList.add('hidden');
             } else {
                 alert('فشل إنشاء الرابط: ' + result.error);
