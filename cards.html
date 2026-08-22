@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>بطاقاتي المهنية - PEFR</title>
+    <title>بطاقاتي المهنية - BEFR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght=400;700;900&display=swap" rel="stylesheet">
     
@@ -53,7 +53,7 @@
 
     <!-- الشريط العلوي -->
     <header class="sticky top-0 w-full bg-brand-red text-white rounded-b-2xl shadow-lg px-5 py-3 z-10">
-        <div class="text-2xl font-extrabold">PEFR</div>
+        <div class="text-2xl font-extrabold">BEFR</div>
         <div id="greetingMessage" class="text-sm opacity-90">مرحباً بالسيد (تحميل...)</div>
         <div class="absolute left-5 top-4">
             <button id="logoutBtn" class="text-white text-sm underline hover:opacity-80 transition bg-transparent border-none cursor-pointer">تسجيل الخروج</button>
@@ -85,6 +85,7 @@
                 <button id="createBtn" class="w-full btn-red font-bold py-3 rounded-xl shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     اضغط لإنشاء بطاقة مهنية جديدة
                 </button>
+                <p class="text-xs text-gray-400 mt-2 text-center">سيُفتح النموذج في نافذة جديدة. بعد الانتهاء من الإرسال، أغلق تلك النافذة يدوياً للعودة هنا وتحديث بطاقاتك.</p>
                 <div id="duplicateWarning" class="text-red-600 text-sm font-bold mt-2 hidden">⚠️ انت تملك بطاقة بهذا التخصص، يمكنك تعديلها أو حذفها.</div>
                 <div id="createLoading" class="loading-spinner hidden"></div>
             </div>
@@ -109,10 +110,20 @@
                 </div>
             </div>
 
-            <!-- [إضافة جديدة] زر طلب حذف حساب PEFR في أسفل مستطيل البطاقات المهنية -->
-            <div class="mt-6 pt-4 border-t border-gray-100">
+            <!-- [إضافة جديدة] قسم مشاركة الملاحظات لتطوير BEFR -->
+            <div class="mt-6 pt-4 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-600 mb-3">نحن نكبر بملاحظاتك.. رأيك القيم يطور خدماتنا</p>
+                <a href="mailto:{يرجى من المستخدم: ضع البريد الإلكتروني الرسمي لإدارة BEFR هنا}?subject=ملاحظات عملاء فيتم"
+                   target="_blank"
+                   class="block w-full btn-outline-red font-bold py-2.5 rounded-xl transition text-sm">
+                    اضغط لتشارك في تطوير BEFR
+                </a>
+            </div>
+
+            <!-- [إضافة جديدة] زر طلب حذف حساب BEFR في أسفل مستطيل البطاقات المهنية -->
+            <div class="mt-3 pt-3 border-t border-gray-100">
                 <button id="deleteAccountBtn" class="w-full btn-outline-red font-bold py-2.5 rounded-xl transition text-sm">
-                    طلب حذف حساب PEFR
+                    طلب حذف حساب BEFR
                 </button>
             </div>
         </div>
@@ -135,11 +146,11 @@ const firebaseConfig = {
     }
     const auth = firebase.auth();
 
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxMBIZjVNVdjlDQHamFi7U6yFYdoOvHanY5OVIPsXzya336hQgek5dl3RXSeTinUqlX/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwFQUQRj2vCAYEV22oMDVZA0zXZTydXC57UR_Z5RQ70ro0P9kh573w1iiu2NEPGfHPY/exec ';
     
     // رابط نموذج كوكل للمعلومات العامة (يتم تعبئة ID السؤال لاحقاً)
     const GENERAL_INFO_FORM_URL = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform';
-    const GENERAL_INFO_EMAIL_ENTRY = 'entry.982804977'; // معرف سؤال الايميل برابط النموذج
+    const GENERAL_INFO_EMAIL_ENTRY = 'entry.197458188'; // معرف سؤال الايميل برابط النموذج
 
     async function callApi(payload) {
         try {
@@ -224,8 +235,7 @@ const firebaseConfig = {
             const cardDiv = document.createElement('div');
             cardDiv.className = 'card-box';
             cardDiv.innerHTML = `
-                <div class="font-bold text-gray-800">${card.name}</div>
-                <div class="text-gray-600">التخصص: ${card.specialty}</div>
+                <div class="font-bold text-gray-800">${card.specialty}</div>
                 <div class="text-xs text-gray-400 font-bold mt-1">الحالة: ${card.status}</div>
                 <div class="flex gap-3 mt-3">
                     <button class="btn-outline-red px-4 py-1 rounded-lg text-sm font-bold transition hover:bg-red-50" onclick="window.open('${card.editLink}', '_blank')">تحديث</button>
@@ -249,7 +259,7 @@ const firebaseConfig = {
 
     // مفتاح التخزين المحلي الخاص بتجميد الزر التفاعلي، منفصل لكل بريد إلكتروني
     function getGeneralInfoFreezeKey(email) {
-        return 'pefr_geninfo_frozen_' + email;
+        return 'befr_geninfo_frozen_' + email;
     }
 
     // تطبيق حالة الزر والقسم التوضيحي: كل النص/الرابط/التفعيل قادم حصراً من Google Apps Script
@@ -368,9 +378,9 @@ const firebaseConfig = {
         openFormWindow('استمارة المعلومات العامة والملف الشخصي', currentGeneralInfoUrl);
     });
 
-    // طلب حذف حساب PEFR
+    // طلب حذف حساب BEFR
     elements.deleteAccountBtn.addEventListener('click', async function() {
-        if (confirm('هل أنت متأكد من تقديم طلب حذف حسابك نهائياً من منصة PEFR؟ سيتم رفع الطلب للإدارة.')) {
+        if (confirm('هل أنت متأكد من تقديم طلب حذف حسابك نهائياً من منصة BEFR؟ سيتم رفع الطلب للإدارة.')) {
             try {
                 const result = await callApi({ action: 'deleteAccount', email: currentUserEmail });
                 if (result.ok) {
@@ -392,7 +402,7 @@ const firebaseConfig = {
         }
         // فتح نافذة جديدة بحجم مناسب (900x700)
         // اسم النافذة يتضمن timestamp لضمان فتح نافذة جديدة كل مرة
-        const formWindow = window.open(url, 'PEFR_form_' + Date.now(), 'width=900,height=700,scrollbars=yes,resizable=yes');
+        const formWindow = window.open(url, 'BEFR_form_' + Date.now(), 'width=900,height=700,scrollbars=yes,resizable=yes');
         
         // في حالة حجب النوافذ المنبثقة من المتصفح
         if (!formWindow) {
@@ -400,12 +410,22 @@ const firebaseConfig = {
             return;
         }
         
-        // فحص دوري لمعرفة إذا أغلق المستخدم النافذة
+        // ملاحظة مهمة: لا يمكن تقنياً معرفة "متى ضغط المستخدم إرسال" داخل نافذة Google
+        // (قيود أمان Cross-Origin تمنع أي صفحة من قراءة محتوى/عنوان صفحة موقع آخر)، لذلك
+        // لا يوجد إغلاق تلقائي فوري عند الإرسال. كحل عملي بديل: تحديث خفيف بالخلفية كل ٨
+        // ثوانٍ تقريباً طوال بقاء النافذة مفتوحة (بحد أقصى ٥ دقائق تفادياً لاستهلاك بلا داعٍ
+        // إن نُسيت النافذة مفتوحة)، بالإضافة إلى تحديث فوري عند إغلاقها يدوياً.
+        let pollCount = 0;
+        const maxPolls = 300; // 300 × ثانية واحدة ≈ 5 دقائق كحد أقصى
         const checkClosed = setInterval(() => {
+            pollCount++;
             if (formWindow.closed) {
                 clearInterval(checkClosed);
-                // النافذة أغُلقت — إعادة تحميل البيانات بحيث تظهر البطاقات/الحالات الجديدة
-                loadCardsData();
+                loadCardsData(); // إغلاق يدوي ← تحديث فوري
+            } else if (pollCount % 8 === 0) {
+                loadCardsData(); // تحديث دوري خفيف بالخلفية دون انتظار إغلاق النافذة
+            } else if (pollCount >= maxPolls) {
+                clearInterval(checkClosed);
             }
         }, 1000);
     };
